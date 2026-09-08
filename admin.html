@@ -54,19 +54,19 @@
 
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">主題名稱 <span class="text-red-500">*</span></label>
-          <input type="text" id="title" placeholder="例如: 第三季現場作業安全規範與防護指引" required class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+          <input type="text" id="title" placeholder="例如: 現場作業安全規範與防護具穿戴規範" required class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
         </div>
 
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">詳細說明內容 <span class="text-red-500">*</span></label>
-          <textarea id="content" rows="5" placeholder="請填寫訓練項目與要點（可多行分段）..." required class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed"></textarea>
+          <textarea id="content" rows="5" placeholder="請填寫訓練項目與要點（可換行分段）..." required class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed"></textarea>
         </div>
 
         <!-- 應訓人員名冊 (Excel 複製貼上) -->
         <div class="border rounded-xl p-4 bg-slate-50 space-y-2">
           <label class="block text-xs font-bold text-slate-700">📋 本次應上課人員名冊 (輸入或自 Excel 複製貼上：ID、姓名)</label>
-          <p class="text-xs text-slate-500">格式範例（一行一位，以逗點、Tab或空格隔開）：<br><code>E1001,陳大明<br>E1002,林小華</code></p>
-          <textarea id="rosterInput" rows="3" placeholder="E1001,陳大明&#10;E1002,林小華&#10;E1003,張志豪" class="w-full border rounded-lg p-2 text-xs font-mono"></textarea>
+          <p class="text-xs text-slate-500">格式範例（一行一位，以逗點、Tab或空格隔開）：<br><code>N000163299,吳晉瑋<br>N000163298,王小名</code></p>
+          <textarea id="rosterInput" rows="3" placeholder="N000163299,吳晉瑋&#10;N000163298,王小名&#10;N000163297,陳大文" class="w-full border rounded-lg p-2 text-xs font-mono"></textarea>
         </div>
 
         <!-- 最多 8 張教材圖片 -->
@@ -79,7 +79,7 @@
           <div id="imagePreviewGrid" class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2"></div>
         </div>
 
-        <!-- 按鈕改成跳出確認預覽 -->
+        <!-- 預覽按鈕 -->
         <button type="button" id="previewBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition shadow">
           下一步：預覽課程內容與確認
         </button>
@@ -126,7 +126,7 @@
 
   </div>
 
-  <!-- 【新增】：開課前確認預覽 Modal 視窗 -->
+  <!-- 發布前確認預覽 Modal 視窗 -->
   <div id="previewModal" class="fixed inset-0 bg-black/60 z-50 hidden flex justify-center items-center p-4">
     <div class="bg-white w-full max-w-2xl rounded-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
       <div class="p-4 border-b flex justify-between items-center bg-slate-50">
@@ -205,8 +205,8 @@
       renderDashboard(opt.dataset.title, opt.dataset.url, fileId);
     }
 
-    // 圖片壓縮輔助工具，避免手機卡死
-    function compressImage(file, maxWidth = 1200, quality = 0.7) {
+    // 關鍵修復：前端強制壓縮圖片至 800px，徹底解決封包過大導致連線失敗問題
+    function compressImage(file, maxWidth = 800, quality = 0.6) {
       return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -216,7 +216,7 @@
             let w = img.width;
             let h = img.height;
             if (w > maxWidth) {
-              h = (h * maxWidth) / w;
+              h = Math.round((h * maxWidth) / w);
               w = maxWidth;
             }
             canvas.width = w;
@@ -231,7 +231,7 @@
       });
     }
 
-    // 圖片上傳 (壓縮後存入)
+    // 圖片上傳監聽
     document.getElementById("imageUploader").addEventListener("change", async function(e) {
       const files = Array.from(e.target.files);
       if (uploadedImages.length + files.length > 8) {
@@ -297,13 +297,12 @@
       const content = document.getElementById("content").value.trim();
 
       if (!courseId || !creator || !title || !content) {
-        alert("請先將所有必填項目（課程編號、經辦、主題、內容）填寫完畢！");
+        alert("請先將所有必填項目（類別、課程編號、經辦、主題、內容）填寫完畢！");
         return;
       }
 
       const rosterList = parseRosterInput(document.getElementById("rosterInput").value);
 
-      // 填入預覽內容
       document.getElementById("prevCategory").innerText = document.getElementById("category").value;
       document.getElementById("prevTitle").innerText = title;
       document.getElementById("prevId").innerText = courseId;
@@ -314,7 +313,7 @@
       const rosterBox = document.getElementById("prevRosterBox");
       rosterBox.innerHTML = rosterList.length > 0 
         ? rosterList.map(r => `${r.id} ${r.name}`).join("、") 
-        : "未匯入名冊（同仁簽名時需手動輸入姓名）";
+        : "未匯入名冊（同仁簽名時需自行輸入姓名）";
 
       document.getElementById("prevImgCount").innerText = uploadedImages.length;
       const imgGal = document.getElementById("prevImgGallery");
@@ -336,11 +335,11 @@
       document.getElementById("previewModal").classList.add("hidden");
     });
 
-    // 確認發布
+    // 確認建立活頁簿
     document.getElementById("confirmPublishBtn").addEventListener("click", async function() {
       const btn = document.getElementById("confirmPublishBtn");
       btn.disabled = true;
-      btn.innerText = "正在建立 Google 活頁簿中...";
+      btn.innerText = "正在 Google Drive 建立活頁簿中（請稍候）...";
 
       const rosterList = parseRosterInput(document.getElementById("rosterInput").value);
 
@@ -372,7 +371,8 @@
           alert("建立失敗：" + result.message);
         }
       } catch (err) {
-        alert("連線建立異常，請確認網路與權限！");
+        console.error("建立活頁簿錯誤：", err);
+        alert("連線建立異常！請確認 Apps Script 權限已部署為最新版本。");
       } finally {
         btn.disabled = false;
         btn.innerText = "確認建立並生成 QR Code";
@@ -428,7 +428,9 @@
         const res = await fetch(`${GAS_URL}?action=exportPdf&fileId=${currentFileId}`);
         const data = await res.json();
         if (data.status === "success") {
-          window.open(data.pdfUrl, "_blank");
+          window.open(result.pdfUrl, "_blank");
+        } else {
+          alert("產出 PDF 失敗！");
         }
       } catch (e) {
         alert("匯出 PDF 異常");
