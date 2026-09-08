@@ -3,99 +3,250 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>教育訓練開課與報表中心</title>
+  <title>宣導/告知/訓練 管理控制中心</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- 引入 QR Code 自動生成套件 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
-<body class="bg-slate-50 min-h-screen p-4 md:p-8 font-sans">
+<body class="bg-slate-100 min-h-screen p-4 md:p-8 font-sans">
 
-  <div class="max-w-3xl mx-auto space-y-6">
-    <!-- 頂部標題 -->
+  <div class="max-w-4xl mx-auto space-y-6">
+
+    <!-- 頂部區：叫出歷史課程 -->
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-      <h1 class="text-2xl font-bold text-slate-800">建立宣導課程 (自動建立 Google 活頁簿)</h1>
-      <p class="text-sm text-slate-500 mt-1">填寫下方資料發布後，系統將自動在 Google Drive 建立獨立試算表，並即時產出專屬簽核 QR Code。</p>
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-800">宣導 / 告知 / 訓練 管理中心</h1>
+          <p class="text-xs text-slate-500 mt-1">建立新課程、隨時調閱歷史活頁簿、追蹤未簽核同仁與匯出 PDF 簽名表。</p>
+        </div>
+        <div class="w-full md:w-auto flex items-center gap-2">
+          <select id="historySelect" class="border rounded-lg p-2 text-sm bg-slate-50 text-slate-700 outline-none w-full md:w-64">
+            <option value="">載入過往課程清單中...</option>
+          </select>
+          <button onclick="loadSelectedHistory()" class="whitespace-nowrap px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-semibold">調閱</button>
+        </div>
+      </div>
     </div>
 
     <!-- 開課表單 -->
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+      <h2 class="text-lg font-bold text-slate-800 border-b pb-3 mb-4">建立新訓練課程</h2>
+      
       <form id="courseForm" class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label class="block text-sm font-semibold text-slate-700 mb-1">課程編號 <span class="text-red-500">*</span></label>
-            <input type="text" id="courseId" placeholder="例如: SAFE-20260907" required class="w-full rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            <label class="block text-xs font-semibold text-slate-600 mb-1">課程類別 <span class="text-red-500">*</span></label>
+            <select id="category" class="w-full border rounded-lg p-2 text-sm bg-white">
+              <option value="宣導/告知/訓練">宣導/告知/訓練</option>
+              <option value="現場工安宣導">現場工安宣導</option>
+              <option value="標準作業SOP訓練">標準作業SOP訓練</option>
+              <option value="重要政策告知">重要政策告知</option>
+            </select>
           </div>
           <div>
-            <label class="block text-sm font-semibold text-slate-700 mb-1">經辦姓名 / 單位</label>
-            <input type="text" id="creator" placeholder="例如: 工安組 林專員" required class="w-full rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            <label class="block text-xs font-semibold text-slate-600 mb-1">課程編號 <span class="text-red-500">*</span></label>
+            <input type="text" id="courseId" placeholder="例如: TR-20260908" required class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">經辦人員 <span class="text-red-500">*</span></label>
+            <input type="text" id="creator" placeholder="工號與姓名" required class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
           </div>
         </div>
 
         <div>
-          <label class="block text-sm font-semibold text-slate-700 mb-1">宣導主題名稱 <span class="text-red-500">*</span></label>
-          <input type="text" id="title" placeholder="例如: 高空作業安全防護具佩戴規範" required class="w-full rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+          <label class="block text-xs font-semibold text-slate-600 mb-1">主題名稱 <span class="text-red-500">*</span></label>
+          <input type="text" id="title" placeholder="例如: 第三季現場作業安全規範與防護指引" required class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
         </div>
 
         <div>
-          <label class="block text-sm font-semibold text-slate-700 mb-1">宣導重點條目 (將顯示於手機與結案簽名表) <span class="text-red-500">*</span></label>
-          <textarea id="content" rows="5" placeholder="1. 高度 2 公尺以上作業必須正確使用安全帶與防墜器。&#10;2. 梯子使用前檢查防滑墊是否磨損。&#10;3. 強風、大雨嚴禁進行室外高處作業。" required class="w-full rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none leading-relaxed"></textarea>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">詳細說明內容 <span class="text-red-500">*</span></label>
+          <textarea id="content" rows="4" placeholder="請填寫訓練項目與要點..." required class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed"></textarea>
+        </div>
+
+        <!-- 應訓人員名冊 (Excel 複製貼上) -->
+        <div class="border rounded-xl p-4 bg-slate-50 space-y-2">
+          <label class="block text-xs font-bold text-slate-700">📋 本次應上課人員名冊 (輸入或自 Excel 複製貼上兩欄：ID、姓名)</label>
+          <p class="text-xs text-slate-500">格式範例（一行一位，以逗點、Tab或空格分開）：<br><code>E1001,陳大明<br>E1002,林小華</code></p>
+          <textarea id="rosterInput" rows="3" placeholder="E1001,陳大明&#10;E1002,林小華&#10;E1003,張志豪" class="w-full border rounded-lg p-2 text-xs font-mono"></textarea>
+        </div>
+
+        <!-- 最多 8 張教材圖片 -->
+        <div class="border rounded-xl p-4 bg-slate-50 space-y-3">
+          <div class="flex justify-between items-center">
+            <label class="block text-xs font-bold text-slate-700">🖼️ 教材圖片上傳 (最多 8 張，每張可附獨立註釋)</label>
+            <span id="imgCountBadge" class="text-xs text-blue-600 font-semibold">0 / 8 張</span>
+          </div>
+          <input type="file" id="imageUploader" accept="image/*" multiple class="text-xs text-slate-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+          <div id="imagePreviewGrid" class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2"></div>
         </div>
 
         <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition shadow">
-          一鍵建立活頁簿並產生 QR Code
+          一鍵建立活頁簿並生成簽核 QR Code
         </button>
       </form>
     </div>
 
-    <!-- 建立成功面板 -->
-    <div id="resultPanel" class="hidden bg-white p-6 rounded-2xl shadow-sm border border-emerald-300 space-y-5">
-      <div class="flex items-center gap-2 text-emerald-600 font-bold text-lg">
-        <span>✓</span> 課程建立完成！Google 活頁簿已建立
+    <!-- 課程儀表板 (建立完成或調閱歷史時顯示) -->
+    <div id="resultPanel" class="hidden bg-white p-6 rounded-2xl shadow-sm border border-emerald-400 space-y-6">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="text-lg font-bold text-slate-800" id="resTitle"></h3>
+        <span class="text-xs px-2 py-1 bg-emerald-100 text-emerald-800 rounded-full font-semibold">課程進行中</span>
       </div>
 
-      <div class="flex flex-col md:flex-row items-center gap-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
+      <!-- QR Code 與連結 -->
+      <div class="flex flex-col md:flex-row items-center gap-6 p-4 bg-slate-50 rounded-xl border">
         <div id="qrcode" class="p-2 bg-white rounded-lg shadow-sm border"></div>
         <div class="space-y-2 flex-1 text-center md:text-left">
-          <h3 class="font-bold text-slate-800 text-base" id="resTitle"></h3>
           <p class="text-xs text-slate-500 break-all" id="resSignUrl"></p>
           <div class="pt-2 flex flex-wrap gap-2 justify-center md:justify-start">
-            <a id="sheetLink" target="_blank" class="px-3 py-2 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700">打開 Google 試算表檢視名冊</a>
+            <a id="sheetLink" target="_blank" class="px-3 py-2 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700">打開 Google 試算表</a>
             <button onclick="window.print()" class="px-3 py-2 bg-slate-800 text-white text-xs font-semibold rounded-lg hover:bg-slate-700">列印宣導單 / QR碼</button>
+            <button onclick="checkUnsigned()" class="px-3 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700">即時查閱未簽核名單</button>
           </div>
         </div>
       </div>
 
-      <!-- 產出簽名表 PDF 區塊 -->
+      <!-- 產出簽名表 PDF -->
       <div class="p-4 bg-blue-50 rounded-xl border border-blue-200 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
-          <p class="text-sm font-bold text-blue-900">匯出完整結案簽名表 (PDF)</p>
-          <p class="text-xs text-blue-700">自動將宣導條目與同仁的手寫簽名字跡排版合成一張 A4 報表。</p>
+          <p class="text-sm font-bold text-blue-900">匯出完整結案簽名表 (含教材圖檔與本人簽名)</p>
+          <p class="text-xs text-blue-700">自動將訓練內容、8張以內的教材圖文與學員手寫字跡轉為 A4 稽核報表。</p>
         </div>
         <button id="pdfBtn" onclick="exportPdf()" class="whitespace-nowrap px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition">
           下載簽名表 PDF
         </button>
       </div>
+
+      <!-- 未簽名名冊彈跳檢視區 -->
+      <div id="unsignedBox" class="hidden p-4 bg-amber-50 rounded-xl border border-amber-200 space-y-2">
+        <h4 class="text-sm font-bold text-amber-900" id="unsignedCountText">尚未簽認人員</h4>
+        <div id="unsignedList" class="flex flex-wrap gap-2 text-xs"></div>
+      </div>
     </div>
+
   </div>
 
   <script>
-    // 您的 Google Apps Script 部署網址
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyGT6xpXAsads6FAzH8bmh9fQeJ69PNT2pkN6lq3Ceth1YhX9z_gct7RLN6qBy4udRk/exec";
+    const GITHUB_USER = "weiweiwu3299-png";
+    const MOBILE_SIGN_PAGE = `https://${GITHUB_USER}.github.io/training-sign/index.html`;
 
+    let uploadedImages = []; // 最多 8 張: [{ base64, note }]
     let currentFileId = "";
 
+    // 1. 初始化：載入歷史課程下拉選單
+    async function loadHistoryList() {
+      try {
+        const res = await fetch(`${GAS_URL}?action=getCourseList`);
+        const data = await res.json();
+        const sel = document.getElementById("historySelect");
+        sel.innerHTML = '<option value="">-- 選擇過往課程叫出 --</option>';
+        if (data.status === "success" && data.list.length > 0) {
+          data.list.reverse().forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c.fileId;
+            opt.innerText = `[${c.courseId}] ${c.title}`;
+            opt.dataset.title = c.title;
+            opt.dataset.url = c.sheetUrl;
+            sel.appendChild(opt);
+          });
+        }
+      } catch (err) {
+        console.error("載入歷史紀錄失敗", err);
+      }
+    }
+    loadHistoryList();
+
+    // 2. 調閱歷史課程
+    function loadSelectedHistory() {
+      const sel = document.getElementById("historySelect");
+      const fileId = sel.value;
+      if (!fileId) return alert("請先選取一堂歷史課程！");
+
+      const opt = sel.options[sel.selectedIndex];
+      currentFileId = fileId;
+      renderDashboard(opt.dataset.title, opt.dataset.url, fileId);
+    }
+
+    // 3. 處理圖片上傳 (最多 8 張，並附帶備註)
+    document.getElementById("imageUploader").addEventListener("change", function(e) {
+      const files = Array.from(e.target.files);
+      if (uploadedImages.length + files.length > 8) {
+        alert("教材圖片最多只能上傳 8 張！");
+        return;
+      }
+
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          uploadedImages.push({ base64: evt.target.result, note: "" });
+          renderImagePreviews();
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    function renderImagePreviews() {
+      const grid = document.getElementById("imagePreviewGrid");
+      grid.innerHTML = "";
+      document.getElementById("imgCountBadge").innerText = `${uploadedImages.length} / 8 張`;
+
+      uploadedImages.forEach((img, idx) => {
+        const card = document.createElement("div");
+        card.className = "border rounded-lg p-2 bg-white text-center space-y-1 relative";
+        card.innerHTML = `
+          <button type="button" onclick="removeImg(${idx})" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs">✕</button>
+          <img src="${img.base64}" class="h-20 w-full object-cover rounded" />
+          <input type="text" placeholder="圖片註釋" value="${img.note}" onchange="updateImgNote(${idx}, this.value)" class="w-full text-xs border rounded p-1" />
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function removeImg(idx) {
+      uploadedImages.splice(idx, 1);
+      renderImagePreviews();
+    }
+
+    function updateImgNote(idx, val) {
+      uploadedImages[idx].note = val;
+    }
+
+    // 4. 解析應訓人員名冊 (解析逗點或 Tab)
+    function parseRosterInput(text) {
+      const list = [];
+      const lines = text.split("\n");
+      lines.forEach(line => {
+        const clean = line.trim();
+        if (clean) {
+          const parts = clean.split(/[,，\t\s]+/);
+          if (parts.length >= 2) {
+            list.push({ id: parts[0].trim(), name: parts[1].trim() });
+          } else if (parts.length === 1) {
+            list.push({ id: parts[0].trim(), name: "" });
+          }
+        }
+      });
+      return list;
+    }
+
+    // 5. 送出建立新課程
     document.getElementById("courseForm").addEventListener("submit", async function(e) {
       e.preventDefault();
       const btn = document.getElementById("submitBtn");
       btn.disabled = true;
-      btn.innerText = "正在 Google Drive 建立活頁簿...";
+      btn.innerText = "建立專屬活頁簿與上傳教材中...";
+
+      const rosterList = parseRosterInput(document.getElementById("rosterInput").value);
 
       const payload = {
         action: "createCourseBook",
+        category: document.getElementById("category").value,
         courseId: document.getElementById("courseId").value.trim(),
         creator: document.getElementById("creator").value.trim(),
         title: document.getElementById("title").value.trim(),
-        content: document.getElementById("content").value.trim()
+        content: document.getElementById("content").value.trim(),
+        roster: rosterList,
+        images: uploadedImages
       };
 
       try {
@@ -108,48 +259,75 @@
 
         if (result.status === "success") {
           currentFileId = result.fileId;
-          
-          // 固定產生 GitHub Pages 上的手機端公開網址
-          const signUrl = `https://weiweiwu3299-png.github.io/training-sign/index.html?f=${currentFileId}`;
-
-          // 產生二維碼
-          const qrDiv = document.getElementById("qrcode");
-          qrDiv.innerHTML = "";
-          new QRCode(qrDiv, { text: signUrl, width: 130, height: 130 });
-
-          document.getElementById("resTitle").innerText = payload.title;
-          document.getElementById("resSignUrl").innerText = signUrl;
-          document.getElementById("sheetLink").href = result.sheetUrl;
-
-          document.getElementById("resultPanel").classList.remove("hidden");
-          document.getElementById("resultPanel").scrollIntoView({ behavior: "smooth" });
+          renderDashboard(payload.title, result.sheetUrl, currentFileId);
+          loadHistoryList(); // 重新整理下拉選單
         } else {
-          alert("建立失敗：" + (result.message || "未知錯誤"));
+          alert("建立失敗：" + result.message);
         }
       } catch (err) {
-        alert("建立失敗，請檢查網路連線或 Apps Script 權限！");
+        alert("連線建立異常，請確認網路與權限！");
       } finally {
         btn.disabled = false;
-        btn.innerText = "一鍵建立活頁簿並產生 QR Code";
+        btn.innerText = "一鍵建立活頁簿並生成簽核 QR Code";
       }
     });
 
+    // 6. 渲染儀表板
+    function renderDashboard(title, sheetUrl, fileId) {
+      const signUrl = `${MOBILE_SIGN_PAGE}?f=${fileId}`;
+      const qrDiv = document.getElementById("qrcode");
+      qrDiv.innerHTML = "";
+      new QRCode(qrDiv, { text: signUrl, width: 130, height: 130 });
+
+      document.getElementById("resTitle").innerText = title;
+      document.getElementById("resSignUrl").innerText = signUrl;
+      document.getElementById("sheetLink").href = sheetUrl;
+      document.getElementById("resultPanel").classList.remove("hidden");
+      document.getElementById("resultPanel").scrollIntoView({ behavior: "smooth" });
+    }
+
+    // 7. 即時比對未簽核名單
+    async function checkUnsigned() {
+      if (!currentFileId) return;
+      try {
+        const res = await fetch(`${GAS_URL}?action=getUnsignedList&fileId=${currentFileId}`);
+        const data = await res.json();
+
+        if (data.status === "success") {
+          const box = document.getElementById("unsignedBox");
+          const list = document.getElementById("unsignedList");
+          box.classList.remove("hidden");
+          document.getElementById("unsignedCountText").innerText = `應訓 ${data.totalCount} 人，已簽 ${data.signedCount} 人，未簽認：${data.unsignedCount} 人`;
+          list.innerHTML = "";
+          data.unsignedList.forEach(u => {
+            const item = document.createElement("span");
+            item.className = "bg-white border border-amber-300 text-amber-800 px-2 py-1 rounded-md";
+            item.innerText = `${u.id} ${u.name}`;
+            list.appendChild(item);
+          });
+        } else {
+          alert(data.message || "名冊查詢異常");
+        }
+      } catch (err) {
+        alert("查詢名冊失敗");
+      }
+    }
+
+    // 8. 下載結案 PDF
     async function exportPdf() {
       if (!currentFileId) return;
       const pdfBtn = document.getElementById("pdfBtn");
       pdfBtn.disabled = true;
-      pdfBtn.innerText = "排版與轉存 PDF 中...";
+      pdfBtn.innerText = "產出 PDF 中...";
 
       try {
         const res = await fetch(`${GAS_URL}?action=exportPdf&fileId=${currentFileId}`);
         const result = await res.json();
         if (result.status === "success") {
           window.open(result.pdfUrl, "_blank");
-        } else {
-          alert("產出 PDF 失敗：" + (result.message || ""));
         }
-      } catch (err) {
-        alert("匯出異常，請確認試算表內是否有簽核紀錄。");
+      } catch (e) {
+        alert("匯出 PDF 異常");
       } finally {
         pdfBtn.disabled = false;
         pdfBtn.innerText = "下載簽名表 PDF";
