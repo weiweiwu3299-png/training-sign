@@ -79,10 +79,8 @@
   </div>
 
   <script>
+    // 您的 Google Apps Script 部署網址
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyGT6xpXAsads6FAzH8bmh9fQeJ69PNT2pkN6lq3Ceth1YhX9z_gct7RLN6qBy4udRk/exec";
-    
-    // 若兩個檔案放在同一目錄，可使用相對路徑 index.html；若發布在 GitHub Pages，可填入完整公開網址
-    const MOBILE_SIGN_PAGE = "index.html";
 
     let currentFileId = "";
 
@@ -111,8 +109,8 @@
         if (result.status === "success") {
           currentFileId = result.fileId;
           
-          // 組裝完整帶參數網址
-          const signUrl = new URL(MOBILE_SIGN_PAGE, window.location.href).href + `?f=${currentFileId}`;
+          // 固定產生 GitHub Pages 上的手機端公開網址
+          const signUrl = `https://weiweiwu3299-png.github.io/training-sign/index.html?f=${currentFileId}`;
 
           // 產生二維碼
           const qrDiv = document.getElementById("qrcode");
@@ -129,7 +127,7 @@
           alert("建立失敗：" + (result.message || "未知錯誤"));
         }
       } catch (err) {
-        alert("建立失敗，請檢查網路連線或授權！");
+        alert("建立失敗，請檢查網路連線或 Apps Script 權限！");
       } finally {
         btn.disabled = false;
         btn.innerText = "一鍵建立活頁簿並產生 QR Code";
