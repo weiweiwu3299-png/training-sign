@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>現場宣導與手寫簽核</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 防止在手機畫布簽名時觸發螢幕滾動 */
+    #sigCanvas {
+      touch-action: none;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 flex justify-center items-center font-sans">
+
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-md p-6 space-y-5">
+    
+    <!-- 宣導內容展示區 -->
+    <div class="border-b pb-4">
+      <span class="text-xs bg-blue-100 text-blue-800 font-semibold px-2.5 py-1 rounded-full">現場教育訓練宣導</span>
+      <h1 class="text-lg font-bold text-gray-800 mt-2" id="courseTitle">宣導項目載入中...</h1>
+      <div class="mt-3 bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-sm text-gray-700">
+        <p class="font-bold text-amber-800 mb-1 flex items-center gap-1">
+          <span>⚠️</span> 宣導重點叮嚀：
+        </p>
+        <div id="courseContent" class="whitespace-pre-line text-sm leading-relaxed text-gray-800">
+          正從雲端讀取資料，請稍候...
+        </div>
+      </div>
+    </div>
+
+    <!-- 簽核填寫表單 -->
+    <form id="signForm" class="space-y-4">
+      <div>
+        <label for="shift" class="block text-sm font-semibold text-gray-700 mb-1">班別 <span class="text-red-500">*</span></label>
+        <select id="shift" required class="w-full rounded-lg border border-gray-300 p-2.5 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="" disabled selected>請選擇當前班別</option>
+          <option value="早班">早班</option>
+          <option value="中班">中班</option>
+          <option value="夜班">夜班</option>
+          <option value="常日班">常日班</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="empId" class="block text-sm font-semibold text-gray-700 mb-1">員工工號 <span class="text-red-500">*</span></label>
+        <input type="text" id="empId" placeholder="例如: E12345" required class="w-full rounded-lg border border-gray-300 p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+
+      <div>
+        <label for="name" class="block text-sm font-semibold text-gray-700 mb-1">同仁姓名 <span class="text-red-500">*</span></label>
+        <input type="text" id="name" placeholder="請輸入中文本名" required class="w-full rounded-lg border border-gray-300 p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+
+      <!-- 手寫簽名板 -->
+      <div>
+        <div class="flex justify-between items-center mb-1">
+          <label class="block text-sm font-semibold text-gray-700">本人手寫簽名 <span class="text-red-500">*</span></label>
+          <button type="button" id="clearBtn" class="text-xs text-red-500 hover:text-red-700 underline">清除重簽</button>
+        </div>
+        <div class="border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 relative overflow-hidden">
+          <canvas id="sigCanvas" width="360" height="140" class="w-full cursor-crosshair"></canvas>
+          <div id="placeholder" class="absolute inset-0 pointer-events-none flex items-center justify-center text-gray-400 text-sm">
+            請在此用手指滑動簽名
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-1">
+        <label class="flex items-start gap-2 cursor-pointer">
+          <input id="agree" type="checkbox" required class="h-4 w-4 mt-0.5 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+          <span class="text-xs text-gray-600 leading-tight">我已確實閱讀並理解上述宣導內容，並確認以上為本人簽署。</span>
+        </label>
+      </div>
+
+      <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition shadow">
+        確認送出簽核
+      </button>
+    </form>
+
+    <!-- 送出成功畫面 -->
+    <div id="successMsg" class="hidden text-center py-8 space-y-2">
+      <div class="text-green-600 text-5xl">✓</div>
+      <h2 class="text-xl font-bold text-gray-800">簽核完成！</h2>
+      <p class="text-xs text-gray-500">資料已記錄於專屬活頁簿。<br>您可以直接關閉此視窗。</p>
+    </div>
+
+  </div>
+
+  <script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyGT6xpXAsads6FAzH8bmh9fQeJ69PNT2pkN6lq3Ceth1YhX9z_gct7RLN6qBy4udRk/exec";
+    
+    // 解析網址參數中的活頁簿 ID (?f=...)
+    const urlParams = new URLSearchParams(window.location.search);
+    const fileId = urlParams.get('f');
+
+    // 動態載入該課程內容
+    async function loadCourse() {
+      if (!fileId) {
+        document.getElementById("courseTitle").innerText = "未指定課程";
+        document.getElementById("courseContent").innerText = "請掃描正確的專屬 QR Code 開啟本頁。";
+        return;
+      }
+
+      try {
+        const res = await fetch(`${GAS_URL}?action=getCourseInfo&fileId=${fileId}`);
+        const data = await res.json();
+        if (data.status === "success") {
+          document.getElementById("courseTitle").innerText = data.title;
+          document.getElementById("courseContent").innerText = data.content;
+        } else {
+          document.getElementById("courseTitle").innerText = "課程讀取失敗";
+          document.getElementById("courseContent").innerText = "找不到該活頁簿，請確認二維碼是否正確。";
+        }
+      } catch (e) {
+        document.getElementById("courseContent").innerText = "無法載入宣導內容，請確認手機連線。";
+      }
+    }
+    loadCourse();
+
+    // Canvas 手寫板事件邏輯
+    const canvas = document.getElementById("sigCanvas");
+    const ctx = canvas.getContext("2d");
+    const clearBtn = document.getElementById("clearBtn");
+    const placeholder = document.getElementById("placeholder");
+    let isDrawing = false;
+    let hasSigned = false;
+
+    ctx.strokeStyle = "#111827";
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    function getPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const cx = e.touches ? e.touches[0].clientX : e.clientX;
+      const cy = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: (cx - rect.left) * (canvas.width / rect.width),
+        y: (cy - rect.top) * (canvas.height / rect.height)
+      };
+    }
+
+    function start(e) {
+      isDrawing = true;
+      hasSigned = true;
+      placeholder.style.display = "none";
+      const p = getPos(e);
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+    }
+
+    function move(e) {
+      if (!isDrawing) return;
+      const p = getPos(e);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+    }
+
+    function end() {
+      isDrawing = false;
+    }
+
+    canvas.addEventListener("mousedown", start);
+    canvas.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", end);
+
+    canvas.addEventListener("touchstart", (e) => { e.preventDefault(); start(e); }, { passive: false });
+    canvas.addEventListener("touchmove", (e) => { e.preventDefault(); draw(e); }, { passive: false });
+    window.addEventListener("touchend", end);
+
+    function draw(e) {
+      if (!isDrawing) return;
+      const p = getPos(e);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+    }
+
+    clearBtn.addEventListener("click", () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      hasSigned = false;
+      placeholder.style.display = "flex";
+    });
+
+    // 表單送出
+    document.getElementById("signForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      if (!fileId) {
+        alert("缺少課程識別代碼，無法送出！");
+        return;
+      }
+      if (!hasSigned) {
+        alert("請在下方手寫框完成簽名！");
+        return;
+      }
+
+      const btn = document.getElementById("submitBtn");
+      btn.disabled = true;
+      btn.innerText = "簽核傳送中...";
+      btn.classList.add("opacity-60", "cursor-not-allowed");
+
+      const payload = {
+        action: "submitSign",
+        fileId: fileId,
+        shift: document.getElementById("shift").value,
+        empId: document.getElementById("empId").value.trim(),
+        name: document.getElementById("name").value.trim(),
+        signature: canvas.toDataURL("image/png")
+      };
+
+      try {
+        await fetch(GAS_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+
+        document.getElementById("signForm").classList.add("hidden");
+        document.getElementById("successMsg").classList.remove("hidden");
+      } catch (err) {
+        alert("傳送失敗，請確認網路連線！");
+        btn.disabled = false;
+        btn.innerText = "確認送出簽核";
+        btn.classList.remove("opacity-60", "cursor-not-allowed");
+      }
+    });
+  </script>
+</body>
+</html>

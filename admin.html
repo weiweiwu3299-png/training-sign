@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>教育訓練開課與報表中心</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入 QR Code 自動生成套件 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body class="bg-slate-50 min-h-screen p-4 md:p-8 font-sans">
+
+  <div class="max-w-3xl mx-auto space-y-6">
+    <!-- 頂部標題 -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+      <h1 class="text-2xl font-bold text-slate-800">建立宣導課程 (自動建立 Google 活頁簿)</h1>
+      <p class="text-sm text-slate-500 mt-1">填寫下方資料發布後，系統將自動在 Google Drive 建立獨立試算表，並即時產出專屬簽核 QR Code。</p>
+    </div>
+
+    <!-- 開課表單 -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+      <form id="courseForm" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1">課程編號 <span class="text-red-500">*</span></label>
+            <input type="text" id="courseId" placeholder="例如: SAFE-20260907" required class="w-full rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1">經辦姓名 / 單位</label>
+            <input type="text" id="creator" placeholder="例如: 工安組 林專員" required class="w-full rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1">宣導主題名稱 <span class="text-red-500">*</span></label>
+          <input type="text" id="title" placeholder="例如: 高空作業安全防護具佩戴規範" required class="w-full rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1">宣導重點條目 (將顯示於手機與結案簽名表) <span class="text-red-500">*</span></label>
+          <textarea id="content" rows="5" placeholder="1. 高度 2 公尺以上作業必須正確使用安全帶與防墜器。&#10;2. 梯子使用前檢查防滑墊是否磨損。&#10;3. 強風、大雨嚴禁進行室外高處作業。" required class="w-full rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none leading-relaxed"></textarea>
+        </div>
+
+        <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition shadow">
+          一鍵建立活頁簿並產生 QR Code
+        </button>
+      </form>
+    </div>
+
+    <!-- 建立成功面板 -->
+    <div id="resultPanel" class="hidden bg-white p-6 rounded-2xl shadow-sm border border-emerald-300 space-y-5">
+      <div class="flex items-center gap-2 text-emerald-600 font-bold text-lg">
+        <span>✓</span> 課程建立完成！Google 活頁簿已建立
+      </div>
+
+      <div class="flex flex-col md:flex-row items-center gap-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
+        <div id="qrcode" class="p-2 bg-white rounded-lg shadow-sm border"></div>
+        <div class="space-y-2 flex-1 text-center md:text-left">
+          <h3 class="font-bold text-slate-800 text-base" id="resTitle"></h3>
+          <p class="text-xs text-slate-500 break-all" id="resSignUrl"></p>
+          <div class="pt-2 flex flex-wrap gap-2 justify-center md:justify-start">
+            <a id="sheetLink" target="_blank" class="px-3 py-2 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700">打開 Google 試算表檢視名冊</a>
+            <button onclick="window.print()" class="px-3 py-2 bg-slate-800 text-white text-xs font-semibold rounded-lg hover:bg-slate-700">列印宣導單 / QR碼</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 產出簽名表 PDF 區塊 -->
+      <div class="p-4 bg-blue-50 rounded-xl border border-blue-200 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>
+          <p class="text-sm font-bold text-blue-900">匯出完整結案簽名表 (PDF)</p>
+          <p class="text-xs text-blue-700">自動將宣導條目與同仁的手寫簽名字跡排版合成一張 A4 報表。</p>
+        </div>
+        <button id="pdfBtn" onclick="exportPdf()" class="whitespace-nowrap px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition">
+          下載簽名表 PDF
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyGT6xpXAsads6FAzH8bmh9fQeJ69PNT2pkN6lq3Ceth1YhX9z_gct7RLN6qBy4udRk/exec";
+    
+    // 若兩個檔案放在同一目錄，可使用相對路徑 index.html；若發布在 GitHub Pages，可填入完整公開網址
+    const MOBILE_SIGN_PAGE = "index.html";
+
+    let currentFileId = "";
+
+    document.getElementById("courseForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const btn = document.getElementById("submitBtn");
+      btn.disabled = true;
+      btn.innerText = "正在 Google Drive 建立活頁簿...";
+
+      const payload = {
+        action: "createCourseBook",
+        courseId: document.getElementById("courseId").value.trim(),
+        creator: document.getElementById("creator").value.trim(),
+        title: document.getElementById("title").value.trim(),
+        content: document.getElementById("content").value.trim()
+      };
+
+      try {
+        const res = await fetch(GAS_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+
+        if (result.status === "success") {
+          currentFileId = result.fileId;
+          
+          // 組裝完整帶參數網址
+          const signUrl = new URL(MOBILE_SIGN_PAGE, window.location.href).href + `?f=${currentFileId}`;
+
+          // 產生二維碼
+          const qrDiv = document.getElementById("qrcode");
+          qrDiv.innerHTML = "";
+          new QRCode(qrDiv, { text: signUrl, width: 130, height: 130 });
+
+          document.getElementById("resTitle").innerText = payload.title;
+          document.getElementById("resSignUrl").innerText = signUrl;
+          document.getElementById("sheetLink").href = result.sheetUrl;
+
+          document.getElementById("resultPanel").classList.remove("hidden");
+          document.getElementById("resultPanel").scrollIntoView({ behavior: "smooth" });
+        } else {
+          alert("建立失敗：" + (result.message || "未知錯誤"));
+        }
+      } catch (err) {
+        alert("建立失敗，請檢查網路連線或授權！");
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "一鍵建立活頁簿並產生 QR Code";
+      }
+    });
+
+    async function exportPdf() {
+      if (!currentFileId) return;
+      const pdfBtn = document.getElementById("pdfBtn");
+      pdfBtn.disabled = true;
+      pdfBtn.innerText = "排版與轉存 PDF 中...";
+
+      try {
+        const res = await fetch(`${GAS_URL}?action=exportPdf&fileId=${currentFileId}`);
+        const result = await res.json();
+        if (result.status === "success") {
+          window.open(result.pdfUrl, "_blank");
+        } else {
+          alert("產出 PDF 失敗：" + (result.message || ""));
+        }
+      } catch (err) {
+        alert("匯出異常，請確認試算表內是否有簽核紀錄。");
+      } finally {
+        pdfBtn.disabled = false;
+        pdfBtn.innerText = "下載簽名表 PDF";
+      }
+    }
+  </script>
+</body>
+</html>
