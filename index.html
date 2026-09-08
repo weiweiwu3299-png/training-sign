@@ -38,7 +38,7 @@
         </div>
       </div>
 
-      <!-- 2. 教材圖片展示區 (最多 8 張，點擊可看大圖) -->
+      <!-- 2. 教材圖片展示區 (支援最多 8 張，點擊可看大圖) -->
       <div id="imageGallery" class="hidden space-y-3 pt-2">
         <p class="text-xs font-bold text-slate-700 flex items-center gap-1">
           <span>🖼️</span> 說明圖示與規範照片 (點擊可看大圖)：
@@ -190,7 +190,7 @@
     document.getElementById("name").addEventListener("input", validateForm);
     document.getElementById("agreeCheck").addEventListener("change", validateForm);
 
-    // 手寫簽名板邏輯
+    // 手寫板邏輯
     const sigModal = document.getElementById("sigModal");
     const openBtn = document.getElementById("openSignModalBtn");
     const reSignBtn = document.getElementById("reSignBtn");
