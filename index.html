@@ -14,34 +14,10 @@
     #modalSigCanvas {
       touch-action: none;
     }
+    /* 簽名底線輔助 */
     .sig-guide-line {
-      background-image: linear-gradient(to bottom, transparent 85%, #e2e8f0 85%);
-      background-size: 100% 45px;
-    }
-
-    /* 直拿手機時強制旋轉 90 度橫向展開 */
-    @media screen and (orientation: portrait) {
-      .rotate-sign-container {
-        transform: rotate(90deg);
-        transform-origin: center center;
-        width: 100vh !important;
-        height: 100vw !important;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        margin-top: -50vw;
-        margin-left: -50vh;
-      }
-    }
-
-    @keyframes phoneRotateAnim {
-      0% { transform: rotate(0deg); }
-      30% { transform: rotate(-90deg); }
-      70% { transform: rotate(-90deg); }
-      100% { transform: rotate(0deg); }
-    }
-    .animate-phone-rotate {
-      animation: phoneRotateAnim 2.5s infinite ease-in-out;
+      background-image: linear-gradient(to bottom, transparent 85%, #f1f5f9 85%);
+      background-size: 100% 40px;
     }
   </style>
 </head>
@@ -91,12 +67,12 @@
         <input type="text" id="name" placeholder="輸入 ID 後自動帶出姓名" required class="w-full rounded-xl border-2 border-slate-300 p-3 text-base bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none">
       </div>
 
-      <!-- 大按鈕彈跳簽名入口 -->
+      <!-- 彈跳簽名板入口 -->
       <div>
         <label class="block text-sm font-bold text-slate-700 mb-1">本人親筆手寫簽名 <span class="text-red-500">*</span></label>
         
         <button type="button" id="openSignModalBtn" class="w-full py-4 border-2 border-dashed border-blue-500 bg-blue-50 text-blue-700 rounded-xl font-bold text-base flex items-center justify-center gap-2 hover:bg-blue-100 transition shadow-sm active:scale-[0.99]">
-          <span class="text-xl">✍️</span> 點此開啟【橫向超大畫布簽名板】
+          <span class="text-xl">✍️</span> 點此開啟【親筆手寫簽名板】
         </button>
 
         <div id="signedPreviewBox" class="hidden border-2 border-emerald-300 rounded-xl p-3 bg-emerald-50/50 flex items-center justify-between">
@@ -128,41 +104,31 @@
 
   </div>
 
-  <!-- 【強制橫向 90 度滿版簽名 Modal (附帶動態旋轉導引)】 -->
-  <div id="sigModal" class="fixed inset-0 bg-black/90 z-50 hidden overflow-hidden select-none">
-    
-    <div class="rotate-sign-container w-full h-full p-4 flex flex-col justify-between">
+  <!-- 【直式彈跳手寫簽名 Modal】 -->
+  <div id="sigModal" class="fixed inset-0 bg-black/75 z-50 hidden flex flex-col justify-center items-center p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl p-5 flex flex-col space-y-4 shadow-2xl">
       
-      <!-- 頂部工具列 -->
-      <div class="flex justify-between items-center bg-slate-800/90 text-white px-4 py-2 rounded-xl backdrop-blur">
-        <div class="flex items-center gap-2">
-          <span class="text-amber-400 font-bold">✍️ 全螢幕橫向簽名模式</span>
-          <span class="text-xs text-slate-300">(請順著螢幕長邊水平書寫)</span>
-        </div>
-        <button type="button" id="modalClearBtn" class="text-xs bg-red-600 hover:bg-red-500 text-white px-3 py-1.5 rounded-lg font-bold transition">
-          清除重簽
+      <!-- 頂部說明與清除按鈕 -->
+      <div class="flex justify-between items-center border-b pb-3">
+        <span class="font-bold text-slate-800 text-base">請在框內以手指書寫姓名</span>
+        <button type="button" id="modalClearBtn" class="text-xs bg-red-50 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg font-bold hover:bg-red-100 transition">
+          清除重寫
         </button>
       </div>
 
-      <!-- 中間大畫布與導引提示 -->
-      <div class="flex-1 my-2 bg-white rounded-2xl border-4 border-slate-300 overflow-hidden relative shadow-2xl flex">
-        <canvas id="modalSigCanvas" class="w-full h-full bg-white sig-guide-line"></canvas>
-        
-        <!-- 動態引導層 -->
-        <div id="rotateGuideOverlay" class="absolute inset-0 bg-slate-900/60 flex flex-col justify-center items-center text-white pointer-events-auto transition-opacity duration-500 cursor-pointer" onclick="dismissGuide()">
-          <div class="text-5xl mb-2 animate-phone-rotate">📱</div>
-          <p class="text-base font-bold tracking-wide">請將手機橫放 或 順著長邊橫向簽名</p>
-          <p class="text-xs text-slate-300 mt-1">點擊任意處立即開始簽名</p>
-        </div>
+      <!-- 直式大畫布 -->
+      <div class="border-2 border-slate-300 rounded-xl bg-white overflow-hidden shadow-inner relative">
+        <canvas id="modalSigCanvas" width="600" height="340" class="w-full h-56 bg-white sig-guide-line"></canvas>
+        <span class="absolute bottom-2 left-3 pointer-events-none text-xs text-slate-300">請在此區域內簽名</span>
       </div>
 
-      <!-- 底部控制按鈕 -->
-      <div class="grid grid-cols-2 gap-4">
-        <button type="button" id="modalCancelBtn" class="py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-base font-bold transition">
-          取消
+      <!-- 底部保存與取消按鈕 -->
+      <div class="grid grid-cols-2 gap-3 pt-1">
+        <button type="button" id="modalCancelBtn" class="py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-sm font-bold transition">
+          取消返回
         </button>
-        <button type="button" id="modalSaveBtn" class="py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-base font-bold shadow-lg transition">
-          ✓ 保存簽名並返回
+        <button type="button" id="modalSaveBtn" class="py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-md transition">
+          保存簽名
         </button>
       </div>
 
@@ -176,7 +142,6 @@
   </div>
 
   <script>
-    // 已更新為您提供的新專案網址
     const GAS_URL = "https://script.google.com/macros/s/AKfycbzdRQXvAC-FkZTRal4vfy3VRUHXxhWeUUKbbXxjIXbp0ITOC3T0PQelrmSDoefu3NEz/exec";
     const urlParams = new URLSearchParams(window.location.search);
     const fileId = urlParams.get('f');
@@ -233,6 +198,7 @@
       document.getElementById("imageLightbox").classList.add("hidden");
     }
 
+    // 輸入 ID 自動帶出姓名
     document.getElementById("empId").addEventListener("input", function(e) {
       const val = e.target.value.trim();
       if (courseRoster[val]) {
@@ -244,49 +210,36 @@
     document.getElementById("name").addEventListener("input", validateForm);
     document.getElementById("agreeCheck").addEventListener("change", validateForm);
 
-    // 橫向手寫簽名邏輯
+    // ==========================================
+    // 直式手寫簽名板邏輯
+    // ==========================================
     const sigModal = document.getElementById("sigModal");
     const openBtn = document.getElementById("openSignModalBtn");
     const reSignBtn = document.getElementById("reSignBtn");
     const cancelBtn = document.getElementById("modalCancelBtn");
     const saveBtn = document.getElementById("modalSaveBtn");
     const clearBtn = document.getElementById("modalClearBtn");
-    const guideOverlay = document.getElementById("rotateGuideOverlay");
 
     const canvas = document.getElementById("modalSigCanvas");
     const ctx = canvas.getContext("2d");
     let isDrawing = false, hasDrawn = false;
 
-    function dismissGuide() {
-      if (guideOverlay) {
-        guideOverlay.style.opacity = "0";
-        setTimeout(() => { guideOverlay.classList.add("hidden"); }, 500);
-      }
-    }
-
-    function resizeCanvas() {
-      const rect = canvas.parentElement.getBoundingClientRect();
-      canvas.width = rect.width * 2;
-      canvas.height = rect.height * 2;
-      ctx.scale(2, 2);
-      ctx.strokeStyle = "#000000";
-      ctx.lineWidth = 4;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-    }
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 3.5;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
 
     function getCanvasPos(e) {
       const rect = canvas.getBoundingClientRect();
       const cx = e.touches ? e.touches[0].clientX : e.clientX;
       const cy = e.touches ? e.touches[0].clientY : e.clientY;
       return {
-        x: cx - rect.left,
-        y: cy - rect.top
+        x: (cx - rect.left) * (canvas.width / rect.width),
+        y: (cy - rect.top) * (canvas.height / rect.height)
       };
     }
 
     function start(e) { 
-      dismissGuide();
       isDrawing = true; 
       hasDrawn = true; 
       const p = getCanvasPos(e); 
@@ -314,12 +267,6 @@
 
     function showSignatureModal() {
       sigModal.classList.remove("hidden");
-      if (guideOverlay) {
-        guideOverlay.classList.remove("hidden");
-        guideOverlay.style.opacity = "1";
-        setTimeout(dismissGuide, 2200);
-      }
-      setTimeout(resizeCanvas, 60);
     }
 
     openBtn.addEventListener("click", showSignatureModal);
@@ -342,12 +289,6 @@
       document.getElementById("signedPreviewBox").classList.remove("hidden");
       sigModal.classList.add("hidden");
       validateForm();
-    });
-
-    window.addEventListener("resize", () => {
-      if (!sigModal.classList.contains("hidden")) {
-        resizeCanvas();
-      }
     });
 
     function validateForm() {
