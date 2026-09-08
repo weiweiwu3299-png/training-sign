@@ -2,7 +2,6 @@
 <html lang="zh-TW" class="overflow-x-hidden">
 <head>
   <meta charset="UTF-8">
-  <!-- 鎖定螢幕寬度，嚴禁左右橫移跑版 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>宣導/告知/訓練 現場簽核</title>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -17,7 +16,6 @@
 </head>
 <body class="bg-slate-100 min-h-screen p-3 md:p-6 flex justify-center items-start font-sans">
 
-  <!-- 主內容容器：限制寬度並支援上下滑動 -->
   <div class="bg-white w-full max-w-md rounded-2xl shadow-md p-5 space-y-5 my-2">
     
     <!-- 1. 訓練資訊與內容區 -->
@@ -40,7 +38,7 @@
         </div>
       </div>
 
-      <!-- 2. 教材圖片展示區 (支援最多 8 張，點擊可放大) -->
+      <!-- 2. 教材圖片展示區 (最多 8 張，點擊可看大圖) -->
       <div id="imageGallery" class="hidden space-y-3 pt-2">
         <p class="text-xs font-bold text-slate-700 flex items-center gap-1">
           <span>🖼️</span> 說明圖示與規範照片 (點擊可看大圖)：
@@ -54,7 +52,7 @@
       
       <div>
         <label for="empId" class="block text-xs font-semibold text-slate-700 mb-1">人員 ID <span class="text-red-500">*</span></label>
-        <input type="text" id="empId" placeholder="輸入人員 ID (如 E1001)" required class="w-full rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+        <input type="text" id="empId" placeholder="輸入人員 ID (如 N000163299)" required class="w-full rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
       </div>
 
       <div>
@@ -117,7 +115,7 @@
     </div>
   </div>
 
-  <!-- 點擊照片放大檢視 Modal -->
+  <!-- 照片放大檢視燈箱 -->
   <div id="imageLightbox" class="fixed inset-0 bg-black/90 z-50 hidden flex flex-col justify-center items-center p-2" onclick="closeLightbox()">
     <img id="lightboxImg" class="max-w-full max-h-[85vh] object-contain rounded-lg" />
     <p id="lightboxNote" class="text-white text-xs mt-3 text-center px-4 bg-black/50 py-1 rounded"></p>
@@ -131,7 +129,6 @@
     let courseRoster = {};
     let savedSignatureBase64 = "";
 
-    // 載入課程教材與名冊
     async function loadCourse() {
       if (!fileId) {
         document.getElementById("courseTitle").innerText = "未指定課程";
@@ -148,7 +145,6 @@
           document.getElementById("courseContent").innerText = data.info.content;
           courseRoster = data.roster || {};
 
-          // 圖片渲染 (採用直接 Base64 或 直連網址，並可點擊放大)
           if (data.info.images && data.info.images.length > 0) {
             const gallery = document.getElementById("imageGallery");
             const list = document.getElementById("imageList");
@@ -194,7 +190,7 @@
     document.getElementById("name").addEventListener("input", validateForm);
     document.getElementById("agreeCheck").addEventListener("change", validateForm);
 
-    // Canvas 全螢幕簽名板
+    // 手寫簽名板邏輯
     const sigModal = document.getElementById("sigModal");
     const openBtn = document.getElementById("openSignModalBtn");
     const reSignBtn = document.getElementById("reSignBtn");
@@ -228,7 +224,7 @@
     canvas.addEventListener("mousemove", move);
     window.addEventListener("mouseup", end);
     canvas.addEventListener("touchstart", (e) => { e.preventDefault(); start(e); }, { passive: false });
-    canvas.addEventListener("touchmove", (e) => { e.preventDefault(); draw(e); }, { passive: false });
+    canvas.addEventListener("touchmove", (e) => { e.preventDefault(); move(e); }, { passive: false });
     window.addEventListener("touchend", end);
 
     function draw(e) {
@@ -260,7 +256,6 @@
       validateForm();
     });
 
-    // 嚴格檢驗所有必填欄位 (全部符合才亮綠色)
     function validateForm() {
       const idVal = document.getElementById("empId").value.trim();
       const nameVal = document.getElementById("name").value.trim();
