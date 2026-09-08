@@ -54,12 +54,12 @@
 
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">主題名稱 <span class="text-red-500">*</span></label>
-          <input type="text" id="title" placeholder="例如: 現場作業安全規範與防護具穿戴規範" required class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+          <input type="text" id="title" placeholder="例如: 現場作業安全規範與防護指引" required class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
         </div>
 
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">詳細說明內容 <span class="text-red-500">*</span></label>
-          <textarea id="content" rows="5" placeholder="請填寫訓練項目與要點（可換行分段）..." required class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed"></textarea>
+          <textarea id="content" rows="5" placeholder="請填寫訓練項目與要點（可多行分段）..." required class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed"></textarea>
         </div>
 
         <!-- 應訓人員名冊 (Excel 複製貼上) -->
@@ -79,7 +79,7 @@
           <div id="imagePreviewGrid" class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2"></div>
         </div>
 
-        <!-- 預覽按鈕 -->
+        <!-- 按鈕進入預覽確認視窗 -->
         <button type="button" id="previewBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition shadow">
           下一步：預覽課程內容與確認
         </button>
@@ -165,6 +165,7 @@
   </div>
 
   <script>
+    // 您的 Apps Script 部署正式網址 (維持 /exec)
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyGT6xpXAsads6FAzH8bmh9fQeJ69PNT2pkN6lq3Ceth1YhX9z_gct7RLN6qBy4udRk/exec";
     const GITHUB_USER = "weiweiwu3299-png";
     const MOBILE_SIGN_PAGE = `https://${GITHUB_USER}.github.io/training-sign/index.html`;
@@ -205,7 +206,7 @@
       renderDashboard(opt.dataset.title, opt.dataset.url, fileId);
     }
 
-    // 關鍵修復：前端強制壓縮圖片至 800px，徹底解決封包過大導致連線失敗問題
+    // 前端影像強效壓縮 (寬度 800px、品質 0.6，避免 Base64 巨大導致 GAS 逾時崩潰)
     function compressImage(file, maxWidth = 800, quality = 0.6) {
       return new Promise((resolve) => {
         const reader = new FileReader();
@@ -231,7 +232,7 @@
       });
     }
 
-    // 圖片上傳監聽
+    // 處理圖片上傳
     document.getElementById("imageUploader").addEventListener("change", async function(e) {
       const files = Array.from(e.target.files);
       if (uploadedImages.length + files.length > 8) {
@@ -289,7 +290,7 @@
       return list;
     }
 
-    // 點擊「預覽課程」
+    // 點擊預覽按鈕
     document.getElementById("previewBtn").addEventListener("click", function() {
       const courseId = document.getElementById("courseId").value.trim();
       const creator = document.getElementById("creator").value.trim();
@@ -297,7 +298,7 @@
       const content = document.getElementById("content").value.trim();
 
       if (!courseId || !creator || !title || !content) {
-        alert("請先將所有必填項目（類別、課程編號、經辦、主題、內容）填寫完畢！");
+        alert("請先將必填項目（類別、課程編號、經辦、主題、內容）填寫完畢！");
         return;
       }
 
@@ -335,7 +336,7 @@
       document.getElementById("previewModal").classList.add("hidden");
     });
 
-    // 確認建立活頁簿
+    // 確認發布
     document.getElementById("confirmPublishBtn").addEventListener("click", async function() {
       const btn = document.getElementById("confirmPublishBtn");
       btn.disabled = true;
@@ -372,7 +373,7 @@
         }
       } catch (err) {
         console.error("建立活頁簿錯誤：", err);
-        alert("連線建立異常！請確認 Apps Script 權限已部署為最新版本。");
+        alert("連線建立異常！請確認網路及 Apps Script 最新版本部署。");
       } finally {
         btn.disabled = false;
         btn.innerText = "確認建立並生成 QR Code";
@@ -418,22 +419,24 @@
       }
     }
 
+    // 匯出 PDF (加入真實錯誤提示反饋)
     async function exportPdf() {
-      if (!currentFileId) return;
+      if (!currentFileId) return alert("請先選取或建立課程！");
       const pdfBtn = document.getElementById("pdfBtn");
       pdfBtn.disabled = true;
-      pdfBtn.innerText = "產出 PDF 中...";
+      pdfBtn.innerText = "產出 PDF 中（約需 5-10 秒）...";
 
       try {
         const res = await fetch(`${GAS_URL}?action=exportPdf&fileId=${currentFileId}`);
         const data = await res.json();
         if (data.status === "success") {
-          window.open(result.pdfUrl, "_blank");
+          window.open(data.pdfUrl, "_blank");
         } else {
-          alert("產出 PDF 失敗！");
+          alert("產出 PDF 失敗，原因：\n" + (data.message || "未知錯誤"));
         }
       } catch (e) {
-        alert("匯出 PDF 異常");
+        console.error(e);
+        alert("連線或解析回應異常：" + e.message);
       } finally {
         pdfBtn.disabled = false;
         pdfBtn.innerText = "下載簽名表 PDF";
