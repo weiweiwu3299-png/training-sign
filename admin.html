@@ -59,13 +59,13 @@
 
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">詳細說明內容 <span class="text-red-500">*</span></label>
-          <textarea id="content" rows="4" placeholder="請填寫訓練項目與要點..." required class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed"></textarea>
+          <textarea id="content" rows="5" placeholder="請填寫訓練項目與要點（可多行分段）..." required class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed"></textarea>
         </div>
 
         <!-- 應訓人員名冊 (Excel 複製貼上) -->
         <div class="border rounded-xl p-4 bg-slate-50 space-y-2">
-          <label class="block text-xs font-bold text-slate-700">📋 本次應上課人員名冊 (輸入或自 Excel 複製貼上兩欄：ID、姓名)</label>
-          <p class="text-xs text-slate-500">格式範例（一行一位，以逗點、Tab或空格分開）：<br><code>E1001,陳大明<br>E1002,林小華</code></p>
+          <label class="block text-xs font-bold text-slate-700">📋 本次應上課人員名冊 (輸入或自 Excel 複製貼上：ID、姓名)</label>
+          <p class="text-xs text-slate-500">格式範例（一行一位，以逗點、Tab或空格隔開）：<br><code>E1001,陳大明<br>E1002,林小華</code></p>
           <textarea id="rosterInput" rows="3" placeholder="E1001,陳大明&#10;E1002,林小華&#10;E1003,張志豪" class="w-full border rounded-lg p-2 text-xs font-mono"></textarea>
         </div>
 
@@ -79,8 +79,9 @@
           <div id="imagePreviewGrid" class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2"></div>
         </div>
 
-        <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition shadow">
-          一鍵建立活頁簿並生成簽核 QR Code
+        <!-- 按鈕改成跳出確認預覽 -->
+        <button type="button" id="previewBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition shadow">
+          下一步：預覽課程內容與確認
         </button>
       </form>
     </div>
@@ -125,15 +126,53 @@
 
   </div>
 
+  <!-- 【新增】：開課前確認預覽 Modal 視窗 -->
+  <div id="previewModal" class="fixed inset-0 bg-black/60 z-50 hidden flex justify-center items-center p-4">
+    <div class="bg-white w-full max-w-2xl rounded-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="p-4 border-b flex justify-between items-center bg-slate-50">
+        <h3 class="font-bold text-slate-800 text-base">確認課程資訊與排版預覽</h3>
+        <span class="text-xs text-slate-500">發布前最後核對</span>
+      </div>
+
+      <div class="p-6 overflow-y-auto space-y-4 text-sm text-slate-700">
+        <div class="bg-blue-50 p-3.5 rounded-xl border border-blue-200">
+          <span class="text-xs bg-blue-200 text-blue-800 px-2 py-0.5 rounded font-semibold" id="prevCategory"></span>
+          <h2 class="text-lg font-bold text-slate-800 mt-1" id="prevTitle"></h2>
+          <p class="text-xs text-slate-500 mt-1">課程編號：<span id="prevId"></span> ｜ 經辦人員：<span id="prevCreator"></span></p>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-slate-800 mb-1">【宣導/告知/訓練 詳細條目】</h4>
+          <div id="prevContent" class="whitespace-pre-line p-3 bg-slate-50 border rounded-lg text-slate-800 leading-relaxed text-xs"></div>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-slate-800 mb-1">【教材圖檔預覽】 (<span id="prevImgCount">0</span> 張)</h4>
+          <div id="prevImgGallery" class="grid grid-cols-2 md:grid-cols-4 gap-2"></div>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-slate-800 mb-1">【應上課同仁名單】 (<span id="prevRosterCount">0</span> 人)</h4>
+          <div id="prevRosterBox" class="p-2 bg-slate-50 border rounded-lg text-xs font-mono max-h-24 overflow-y-auto"></div>
+        </div>
+      </div>
+
+      <div class="p-4 border-t bg-slate-50 flex justify-end gap-3">
+        <button type="button" id="closePreviewBtn" class="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-sm font-semibold">返回修改</button>
+        <button type="button" id="confirmPublishBtn" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow">確認建立並生成 QR Code</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyGT6xpXAsads6FAzH8bmh9fQeJ69PNT2pkN6lq3Ceth1YhX9z_gct7RLN6qBy4udRk/exec";
     const GITHUB_USER = "weiweiwu3299-png";
     const MOBILE_SIGN_PAGE = `https://${GITHUB_USER}.github.io/training-sign/index.html`;
 
-    let uploadedImages = []; // 最多 8 張: [{ base64, note }]
+    let uploadedImages = [];
     let currentFileId = "";
 
-    // 1. 初始化：載入歷史課程下拉選單
+    // 載入歷史清單
     async function loadHistoryList() {
       try {
         const res = await fetch(`${GAS_URL}?action=getCourseList`);
@@ -156,7 +195,6 @@
     }
     loadHistoryList();
 
-    // 2. 調閱歷史課程
     function loadSelectedHistory() {
       const sel = document.getElementById("historySelect");
       const fileId = sel.value;
@@ -167,22 +205,45 @@
       renderDashboard(opt.dataset.title, opt.dataset.url, fileId);
     }
 
-    // 3. 處理圖片上傳 (最多 8 張，並附帶備註)
-    document.getElementById("imageUploader").addEventListener("change", function(e) {
+    // 圖片壓縮輔助工具，避免手機卡死
+    function compressImage(file, maxWidth = 1200, quality = 0.7) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            let w = img.width;
+            let h = img.height;
+            if (w > maxWidth) {
+              h = (h * maxWidth) / w;
+              w = maxWidth;
+            }
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL("image/jpeg", quality));
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // 圖片上傳 (壓縮後存入)
+    document.getElementById("imageUploader").addEventListener("change", async function(e) {
       const files = Array.from(e.target.files);
       if (uploadedImages.length + files.length > 8) {
         alert("教材圖片最多只能上傳 8 張！");
         return;
       }
 
-      files.forEach(file => {
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-          uploadedImages.push({ base64: evt.target.result, note: "" });
-          renderImagePreviews();
-        };
-        reader.readAsDataURL(file);
-      });
+      for (const file of files) {
+        const compressedBase64 = await compressImage(file);
+        uploadedImages.push({ base64: compressedBase64, note: "" });
+      }
+      renderImagePreviews();
     });
 
     function renderImagePreviews() {
@@ -211,7 +272,6 @@
       uploadedImages[idx].note = val;
     }
 
-    // 4. 解析應訓人員名冊 (解析逗點或 Tab)
     function parseRosterInput(text) {
       const list = [];
       const lines = text.split("\n");
@@ -229,12 +289,58 @@
       return list;
     }
 
-    // 5. 送出建立新課程
-    document.getElementById("courseForm").addEventListener("submit", async function(e) {
-      e.preventDefault();
-      const btn = document.getElementById("submitBtn");
+    // 點擊「預覽課程」
+    document.getElementById("previewBtn").addEventListener("click", function() {
+      const courseId = document.getElementById("courseId").value.trim();
+      const creator = document.getElementById("creator").value.trim();
+      const title = document.getElementById("title").value.trim();
+      const content = document.getElementById("content").value.trim();
+
+      if (!courseId || !creator || !title || !content) {
+        alert("請先將所有必填項目（課程編號、經辦、主題、內容）填寫完畢！");
+        return;
+      }
+
+      const rosterList = parseRosterInput(document.getElementById("rosterInput").value);
+
+      // 填入預覽內容
+      document.getElementById("prevCategory").innerText = document.getElementById("category").value;
+      document.getElementById("prevTitle").innerText = title;
+      document.getElementById("prevId").innerText = courseId;
+      document.getElementById("prevCreator").innerText = creator;
+      document.getElementById("prevContent").innerText = content;
+      document.getElementById("prevRosterCount").innerText = rosterList.length;
+
+      const rosterBox = document.getElementById("prevRosterBox");
+      rosterBox.innerHTML = rosterList.length > 0 
+        ? rosterList.map(r => `${r.id} ${r.name}`).join("、") 
+        : "未匯入名冊（同仁簽名時需手動輸入姓名）";
+
+      document.getElementById("prevImgCount").innerText = uploadedImages.length;
+      const imgGal = document.getElementById("prevImgGallery");
+      imgGal.innerHTML = "";
+      uploadedImages.forEach(img => {
+        const item = document.createElement("div");
+        item.className = "border rounded p-1 text-center bg-white";
+        item.innerHTML = `
+          <img src="${img.base64}" class="h-16 w-full object-cover rounded mb-1" />
+          <p class="text-[10px] text-slate-500 truncate">${img.note || "無註釋"}</p>
+        `;
+        imgGal.appendChild(item);
+      });
+
+      document.getElementById("previewModal").classList.remove("hidden");
+    });
+
+    document.getElementById("closePreviewBtn").addEventListener("click", () => {
+      document.getElementById("previewModal").classList.add("hidden");
+    });
+
+    // 確認發布
+    document.getElementById("confirmPublishBtn").addEventListener("click", async function() {
+      const btn = document.getElementById("confirmPublishBtn");
       btn.disabled = true;
-      btn.innerText = "建立專屬活頁簿與上傳教材中...";
+      btn.innerText = "正在建立 Google 活頁簿中...";
 
       const rosterList = parseRosterInput(document.getElementById("rosterInput").value);
 
@@ -259,8 +365,9 @@
 
         if (result.status === "success") {
           currentFileId = result.fileId;
+          document.getElementById("previewModal").classList.add("hidden");
           renderDashboard(payload.title, result.sheetUrl, currentFileId);
-          loadHistoryList(); // 重新整理下拉選單
+          loadHistoryList();
         } else {
           alert("建立失敗：" + result.message);
         }
@@ -268,11 +375,10 @@
         alert("連線建立異常，請確認網路與權限！");
       } finally {
         btn.disabled = false;
-        btn.innerText = "一鍵建立活頁簿並生成簽核 QR Code";
+        btn.innerText = "確認建立並生成 QR Code";
       }
     });
 
-    // 6. 渲染儀表板
     function renderDashboard(title, sheetUrl, fileId) {
       const signUrl = `${MOBILE_SIGN_PAGE}?f=${fileId}`;
       const qrDiv = document.getElementById("qrcode");
@@ -286,7 +392,6 @@
       document.getElementById("resultPanel").scrollIntoView({ behavior: "smooth" });
     }
 
-    // 7. 即時比對未簽核名單
     async function checkUnsigned() {
       if (!currentFileId) return;
       try {
@@ -313,7 +418,6 @@
       }
     }
 
-    // 8. 下載結案 PDF
     async function exportPdf() {
       if (!currentFileId) return;
       const pdfBtn = document.getElementById("pdfBtn");
@@ -322,9 +426,9 @@
 
       try {
         const res = await fetch(`${GAS_URL}?action=exportPdf&fileId=${currentFileId}`);
-        const result = await res.json();
-        if (result.status === "success") {
-          window.open(result.pdfUrl, "_blank");
+        const data = await res.json();
+        if (data.status === "success") {
+          window.open(data.pdfUrl, "_blank");
         }
       } catch (e) {
         alert("匯出 PDF 異常");
