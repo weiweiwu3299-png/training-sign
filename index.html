@@ -14,13 +14,12 @@
     #modalSigCanvas {
       touch-action: none;
     }
-    /* 簽名底線輔助 */
     .sig-guide-line {
       background-image: linear-gradient(to bottom, transparent 85%, #e2e8f0 85%);
       background-size: 100% 45px;
     }
 
-    /* 手機直向時，強制將簽名視窗旋轉 90 度變成全螢幕橫向 */
+    /* 直拿手機時強制旋轉 90 度橫向展開 */
     @media screen and (orientation: portrait) {
       .rotate-sign-container {
         transform: rotate(90deg);
@@ -35,7 +34,6 @@
       }
     }
 
-    /* 旋轉引導提示動畫 */
     @keyframes phoneRotateAnim {
       0% { transform: rotate(0deg); }
       30% { transform: rotate(-90deg); }
@@ -130,10 +128,9 @@
 
   </div>
 
-  <!-- 【全新升級】：強制橫向 90 度滿版簽名 Modal (附帶動態旋轉導引) -->
+  <!-- 【強制橫向 90 度滿版簽名 Modal (附帶動態旋轉導引)】 -->
   <div id="sigModal" class="fixed inset-0 bg-black/90 z-50 hidden overflow-hidden select-none">
     
-    <!-- 旋轉內部容器 -->
     <div class="rotate-sign-container w-full h-full p-4 flex flex-col justify-between">
       
       <!-- 頂部工具列 -->
@@ -151,7 +148,7 @@
       <div class="flex-1 my-2 bg-white rounded-2xl border-4 border-slate-300 overflow-hidden relative shadow-2xl flex">
         <canvas id="modalSigCanvas" class="w-full h-full bg-white sig-guide-line"></canvas>
         
-        <!-- 動態引導層 (點擊或 2 秒後自動淡出) -->
+        <!-- 動態引導層 -->
         <div id="rotateGuideOverlay" class="absolute inset-0 bg-slate-900/60 flex flex-col justify-center items-center text-white pointer-events-auto transition-opacity duration-500 cursor-pointer" onclick="dismissGuide()">
           <div class="text-5xl mb-2 animate-phone-rotate">📱</div>
           <p class="text-base font-bold tracking-wide">請將手機橫放 或 順著長邊橫向簽名</p>
@@ -179,7 +176,7 @@
   </div>
 
   <script>
-    // 您的 Apps Script 部署正式網址 (/exec)
+    // 請確認此處已填入您公司帳號部署的 GAS 網址 (/exec)
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyGT6xpXAsads6FAzH8bmh9fQeJ69PNT2pkN6lq3Ceth1YhX9z_gct7RLN6qBy4udRk/exec";
     const urlParams = new URLSearchParams(window.location.search);
     const fileId = urlParams.get('f');
@@ -247,9 +244,7 @@
     document.getElementById("name").addEventListener("input", validateForm);
     document.getElementById("agreeCheck").addEventListener("change", validateForm);
 
-    // ==========================================
     // 橫向手寫簽名邏輯
-    // ==========================================
     const sigModal = document.getElementById("sigModal");
     const openBtn = document.getElementById("openSignModalBtn");
     const reSignBtn = document.getElementById("reSignBtn");
@@ -322,7 +317,7 @@
       if (guideOverlay) {
         guideOverlay.classList.remove("hidden");
         guideOverlay.style.opacity = "1";
-        setTimeout(dismissGuide, 2200); // 2.2 秒後自動隱藏
+        setTimeout(dismissGuide, 2200);
       }
       setTimeout(resizeCanvas, 60);
     }
