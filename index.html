@@ -11,118 +11,176 @@
       width: 100%;
       position: relative;
     }
-    #modalSigCanvas { touch-action: none; }
+    #modalSigCanvas {
+      touch-action: none;
+    }
+    /* 簽名底線輔助 */
+    .sig-guide-line {
+      background-image: linear-gradient(to bottom, transparent 85%, #e2e8f0 85%);
+      background-size: 100% 45px;
+    }
+
+    /* 手機直向時，強制將簽名視窗旋轉 90 度變成全螢幕橫向 */
+    @media screen and (orientation: portrait) {
+      .rotate-sign-container {
+        transform: rotate(90deg);
+        transform-origin: center center;
+        width: 100vh !important;
+        height: 100vw !important;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        margin-top: -50vw;
+        margin-left: -50vh;
+      }
+    }
+
+    /* 旋轉引導提示動畫 */
+    @keyframes phoneRotateAnim {
+      0% { transform: rotate(0deg); }
+      30% { transform: rotate(-90deg); }
+      70% { transform: rotate(-90deg); }
+      100% { transform: rotate(0deg); }
+    }
+    .animate-phone-rotate {
+      animation: phoneRotateAnim 2.5s infinite ease-in-out;
+    }
   </style>
 </head>
 <body class="bg-slate-100 min-h-screen p-3 md:p-6 flex justify-center items-start font-sans">
 
-  <div class="bg-white w-full max-w-md rounded-2xl shadow-md p-5 space-y-5 my-2">
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-md p-5 space-y-6 my-2">
     
-    <!-- 1. 訓練資訊與內容區 -->
-    <div class="border-b pb-4 space-y-3">
+    <!-- 1. 訓練資訊與大字體內容區 -->
+    <div class="border-b pb-5 space-y-4">
       <div class="flex items-center justify-between">
-        <span class="text-xs bg-blue-100 text-blue-800 font-semibold px-2.5 py-1 rounded-full" id="categoryBadge">
+        <span class="text-sm bg-blue-100 text-blue-800 font-bold px-3 py-1 rounded-full" id="categoryBadge">
           宣導/告知/訓練
         </span>
-        <span class="text-xs text-slate-400">線上無紙化</span>
+        <span class="text-xs text-slate-400 font-medium">線上無紙化簽核</span>
       </div>
       
-      <h1 class="text-xl font-bold text-slate-800 leading-snug" id="courseTitle">載入中...</h1>
+      <h1 class="text-2xl font-bold text-slate-800 leading-snug" id="courseTitle">載入中...</h1>
       
-      <div class="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-sm text-slate-800 space-y-2">
-        <p class="font-bold text-amber-900 flex items-center gap-1">
-          <span>⚠️</span> 宣導/告知/訓練 重點項目：
+      <div class="bg-amber-50 border-2 border-amber-300 rounded-xl p-4 text-slate-800 space-y-3">
+        <p class="font-bold text-amber-950 text-base flex items-center gap-1.5 border-b border-amber-200 pb-2">
+          <span class="text-xl">⚠️</span> 宣導/告知/訓練 重點項目：
         </p>
-        <div id="courseContent" class="whitespace-pre-line leading-relaxed text-sm break-words">
+        <div id="courseContent" class="whitespace-pre-line leading-relaxed text-base md:text-lg font-medium text-slate-900 break-words">
           正在從雲端載入內容...
         </div>
       </div>
 
-      <!-- 2. 教材圖片展示區 (支援最多 8 張，點擊可看大圖) -->
+      <!-- 2. 教材圖片展示區 (最多 8 張，點擊看大圖) -->
       <div id="imageGallery" class="hidden space-y-3 pt-2">
-        <p class="text-xs font-bold text-slate-700 flex items-center gap-1">
-          <span>🖼️</span> 說明圖示與規範照片 (點擊可看大圖)：
+        <p class="text-sm font-bold text-slate-700 flex items-center gap-1">
+          <span>🖼️</span> 說明圖示與規範照片 (點擊看大圖)：
         </p>
         <div id="imageList" class="space-y-4"></div>
       </div>
     </div>
 
     <!-- 3. 學員簽認表單 -->
-    <form id="signForm" class="space-y-4">
+    <form id="signForm" class="space-y-5">
       
       <div>
-        <label for="empId" class="block text-xs font-semibold text-slate-700 mb-1">人員 ID <span class="text-red-500">*</span></label>
-        <input type="text" id="empId" placeholder="輸入人員 ID (如 N000163299)" required class="w-full rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+        <label for="empId" class="block text-sm font-bold text-slate-700 mb-1">人員 ID <span class="text-red-500">*</span></label>
+        <input type="text" id="empId" placeholder="請輸入人員 ID (如 N000163299)" required class="w-full rounded-xl border-2 border-slate-300 p-3 text-base focus:ring-2 focus:ring-blue-500 outline-none">
       </div>
 
       <div>
-        <label for="name" class="block text-xs font-semibold text-slate-700 mb-1">同仁姓名 <span class="text-red-500">*</span></label>
-        <input type="text" id="name" placeholder="輸入 ID 後自動帶出姓名" required class="w-full rounded-lg border border-slate-300 p-2.5 text-sm bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none">
+        <label for="name" class="block text-sm font-bold text-slate-700 mb-1">同仁姓名 <span class="text-red-500">*</span></label>
+        <input type="text" id="name" placeholder="輸入 ID 後自動帶出姓名" required class="w-full rounded-xl border-2 border-slate-300 p-3 text-base bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none">
       </div>
 
-      <!-- 彈跳手寫簽名入口 -->
+      <!-- 大按鈕彈跳簽名入口 -->
       <div>
-        <label class="block text-xs font-semibold text-slate-700 mb-1">本人親筆手寫簽名 <span class="text-red-500">*</span></label>
+        <label class="block text-sm font-bold text-slate-700 mb-1">本人親筆手寫簽名 <span class="text-red-500">*</span></label>
         
-        <button type="button" id="openSignModalBtn" class="w-full py-3.5 border-2 border-dashed border-blue-400 bg-blue-50 text-blue-700 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-100">
-          <span>✍️</span> 點此開啟全螢幕簽名板
+        <button type="button" id="openSignModalBtn" class="w-full py-4 border-2 border-dashed border-blue-500 bg-blue-50 text-blue-700 rounded-xl font-bold text-base flex items-center justify-center gap-2 hover:bg-blue-100 transition shadow-sm active:scale-[0.99]">
+          <span class="text-xl">✍️</span> 點此開啟【橫向超大畫布簽名板】
         </button>
 
-        <div id="signedPreviewBox" class="hidden border rounded-xl p-2 bg-slate-50 flex items-center justify-between">
-          <img id="sigPreviewImg" class="h-12 max-w-[180px] object-contain border bg-white rounded" />
-          <button type="button" id="reSignBtn" class="text-xs text-blue-600 underline font-semibold px-2">重簽</button>
+        <div id="signedPreviewBox" class="hidden border-2 border-emerald-300 rounded-xl p-3 bg-emerald-50/50 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span class="text-emerald-600 font-bold text-sm">✓ 已完成簽名</span>
+            <img id="sigPreviewImg" class="h-12 max-w-[170px] object-contain border bg-white rounded-lg p-0.5" />
+          </div>
+          <button type="button" id="reSignBtn" class="text-sm text-blue-600 underline font-bold px-2">重新簽署</button>
         </div>
       </div>
 
-      <div class="pt-1">
-        <label class="flex items-start gap-2 cursor-pointer">
-          <input id="agreeCheck" type="checkbox" required class="h-4 w-4 mt-0.5 text-blue-600 rounded border-slate-300">
-          <span class="text-xs text-slate-600 leading-tight">我已確實閱讀並完整理解上述宣導/告知/訓練內容，承諾落實執行。</span>
+      <div class="pt-2">
+        <label class="flex items-start gap-2.5 cursor-pointer">
+          <input id="agreeCheck" type="checkbox" required class="h-5 w-5 mt-0.5 text-blue-600 rounded border-slate-300">
+          <span class="text-sm text-slate-700 font-medium leading-normal">我已確實閱讀並完整理解上述宣導/告知/訓練內容，承諾落實執行。</span>
         </label>
       </div>
 
-      <!-- 送出按鈕 (未齊全前為灰色) -->
-      <button type="submit" id="submitBtn" disabled class="w-full bg-slate-300 text-slate-500 font-bold py-3.5 rounded-xl transition cursor-not-allowed">
+      <button type="submit" id="submitBtn" disabled class="w-full bg-slate-300 text-slate-500 font-bold py-4 rounded-xl text-base transition cursor-not-allowed">
         請完成所有欄位與親筆簽名
       </button>
     </form>
 
-    <!-- 送出成功提示 -->
-    <div id="successMsg" class="hidden text-center py-8 space-y-2">
-      <div class="text-emerald-500 text-5xl font-bold">✓</div>
-      <h2 class="text-xl font-bold text-slate-800">已完成簽認！</h2>
-      <p class="text-xs text-slate-500">紀錄與手寫簽名已存入活頁簿。<br>您可以關閉本視窗。</p>
+    <div id="successMsg" class="hidden text-center py-10 space-y-3">
+      <div class="text-emerald-500 text-6xl font-bold">✓</div>
+      <h2 class="text-2xl font-bold text-slate-800">已成功完成簽認！</h2>
+      <p class="text-sm text-slate-500 leading-relaxed">紀錄與手寫簽名已存入活頁簿。<br>您可以關閉本視窗或返回工作崗位。</p>
     </div>
 
   </div>
 
-  <!-- 全螢幕彈跳簽名 Modal -->
-  <div id="sigModal" class="fixed inset-0 bg-black/75 z-50 hidden flex flex-col justify-center items-center p-3">
-    <div class="bg-white w-full max-w-lg rounded-2xl p-4 flex flex-col space-y-3 shadow-2xl">
-      <div class="flex justify-between items-center border-b pb-2">
-        <span class="font-bold text-slate-800 text-sm">請在框內用手指簽名</span>
-        <button type="button" id="modalClearBtn" class="text-xs text-red-500 hover:text-red-700 underline font-semibold">清除重寫</button>
+  <!-- 【全新升級】：強制橫向 90 度滿版簽名 Modal (附帶動態旋轉導引) -->
+  <div id="sigModal" class="fixed inset-0 bg-black/90 z-50 hidden overflow-hidden select-none">
+    
+    <!-- 旋轉內部容器 -->
+    <div class="rotate-sign-container w-full h-full p-4 flex flex-col justify-between">
+      
+      <!-- 頂部工具列 -->
+      <div class="flex justify-between items-center bg-slate-800/90 text-white px-4 py-2 rounded-xl backdrop-blur">
+        <div class="flex items-center gap-2">
+          <span class="text-amber-400 font-bold">✍️ 全螢幕橫向簽名模式</span>
+          <span class="text-xs text-slate-300">(請順著螢幕長邊水平書寫)</span>
+        </div>
+        <button type="button" id="modalClearBtn" class="text-xs bg-red-600 hover:bg-red-500 text-white px-3 py-1.5 rounded-lg font-bold transition">
+          清除重簽
+        </button>
       </div>
 
-      <div class="border-2 border-slate-300 rounded-xl bg-slate-50 overflow-hidden">
-        <canvas id="modalSigCanvas" width="500" height="240" class="w-full bg-white"></canvas>
+      <!-- 中間大畫布與導引提示 -->
+      <div class="flex-1 my-2 bg-white rounded-2xl border-4 border-slate-300 overflow-hidden relative shadow-2xl flex">
+        <canvas id="modalSigCanvas" class="w-full h-full bg-white sig-guide-line"></canvas>
+        
+        <!-- 動態引導層 (點擊或 2 秒後自動淡出) -->
+        <div id="rotateGuideOverlay" class="absolute inset-0 bg-slate-900/60 flex flex-col justify-center items-center text-white pointer-events-auto transition-opacity duration-500 cursor-pointer" onclick="dismissGuide()">
+          <div class="text-5xl mb-2 animate-phone-rotate">📱</div>
+          <p class="text-base font-bold tracking-wide">請將手機橫放 或 順著長邊橫向簽名</p>
+          <p class="text-xs text-slate-300 mt-1">點擊任意處立即開始簽名</p>
+        </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-3 pt-1">
-        <button type="button" id="modalCancelBtn" class="py-2.5 bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold">取消</button>
-        <button type="button" id="modalSaveBtn" class="py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold shadow">保存簽名</button>
+      <!-- 底部控制按鈕 -->
+      <div class="grid grid-cols-2 gap-4">
+        <button type="button" id="modalCancelBtn" class="py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-base font-bold transition">
+          取消
+        </button>
+        <button type="button" id="modalSaveBtn" class="py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-base font-bold shadow-lg transition">
+          ✓ 保存簽名並返回
+        </button>
       </div>
+
     </div>
   </div>
 
-  <!-- 照片放大檢視燈箱 -->
+  <!-- 照片放大燈箱 -->
   <div id="imageLightbox" class="fixed inset-0 bg-black/90 z-50 hidden flex flex-col justify-center items-center p-2" onclick="closeLightbox()">
     <img id="lightboxImg" class="max-w-full max-h-[85vh] object-contain rounded-lg" />
-    <p id="lightboxNote" class="text-white text-xs mt-3 text-center px-4 bg-black/50 py-1 rounded"></p>
+    <p id="lightboxNote" class="text-white text-sm mt-3 text-center px-4 bg-black/50 py-1 rounded"></p>
   </div>
 
   <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbzdRQXvAC-FkZTRal4vfy3VRUHXxhWeUUKbbXxjIXbp0ITOC3T0PQelrmSDoefu3NEz/exec";
+    // 您的 Apps Script 部署正式網址 (/exec)
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyGT6xpXAsads6FAzH8bmh9fQeJ69PNT2pkN6lq3Ceth1YhX9z_gct7RLN6qBy4udRk/exec";
     const urlParams = new URLSearchParams(window.location.search);
     const fileId = urlParams.get('f');
 
@@ -155,8 +213,8 @@
               item.className = "border border-slate-200 rounded-xl overflow-hidden bg-slate-50 shadow-sm";
               const imgSrc = img.base64 || img.url;
               item.innerHTML = `
-                <img src="${imgSrc}" class="w-full h-auto max-h-64 object-contain bg-white cursor-pointer" onclick="openLightbox('${imgSrc}', '${encodeURIComponent(img.note || '')}')" />
-                ${img.note ? `<p class="p-2.5 text-xs text-slate-700 bg-slate-50 border-t">${img.note}</p>` : ''}
+                <img src="${imgSrc}" class="w-full h-auto max-h-72 object-contain bg-white cursor-pointer" onclick="openLightbox('${imgSrc}', '${encodeURIComponent(img.note || '')}')" />
+                ${img.note ? `<p class="p-3 text-sm text-slate-800 font-medium bg-slate-50 border-t">${img.note}</p>` : ''}
               `;
               list.appendChild(item);
             });
@@ -178,7 +236,6 @@
       document.getElementById("imageLightbox").classList.add("hidden");
     }
 
-    // 輸入 ID 自動帶出姓名
     document.getElementById("empId").addEventListener("input", function(e) {
       const val = e.target.value.trim();
       if (courseRoster[val]) {
@@ -190,35 +247,68 @@
     document.getElementById("name").addEventListener("input", validateForm);
     document.getElementById("agreeCheck").addEventListener("change", validateForm);
 
-    // 手寫板邏輯
+    // ==========================================
+    // 橫向手寫簽名邏輯
+    // ==========================================
     const sigModal = document.getElementById("sigModal");
     const openBtn = document.getElementById("openSignModalBtn");
     const reSignBtn = document.getElementById("reSignBtn");
     const cancelBtn = document.getElementById("modalCancelBtn");
     const saveBtn = document.getElementById("modalSaveBtn");
     const clearBtn = document.getElementById("modalClearBtn");
+    const guideOverlay = document.getElementById("rotateGuideOverlay");
 
     const canvas = document.getElementById("modalSigCanvas");
     const ctx = canvas.getContext("2d");
     let isDrawing = false, hasDrawn = false;
 
-    ctx.strokeStyle = "#000";
-    ctx.lineWidth = 3;
-    ctx.lineCap = "round";
+    function dismissGuide() {
+      if (guideOverlay) {
+        guideOverlay.style.opacity = "0";
+        setTimeout(() => { guideOverlay.classList.add("hidden"); }, 500);
+      }
+    }
+
+    function resizeCanvas() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width * 2;
+      canvas.height = rect.height * 2;
+      ctx.scale(2, 2);
+      ctx.strokeStyle = "#000000";
+      ctx.lineWidth = 4;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+    }
 
     function getCanvasPos(e) {
       const rect = canvas.getBoundingClientRect();
       const cx = e.touches ? e.touches[0].clientX : e.clientX;
       const cy = e.touches ? e.touches[0].clientY : e.clientY;
       return {
-        x: (cx - rect.left) * (canvas.width / rect.width),
-        y: (cy - rect.top) * (canvas.height / rect.height)
+        x: cx - rect.left,
+        y: cy - rect.top
       };
     }
 
-    function start(e) { isDrawing = true; hasDrawn = true; const p = getCanvasPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
-    function move(e) { if (!isDrawing) return; const p = getCanvasPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); }
-    function end() { isDrawing = false; }
+    function start(e) { 
+      dismissGuide();
+      isDrawing = true; 
+      hasDrawn = true; 
+      const p = getCanvasPos(e); 
+      ctx.beginPath(); 
+      ctx.moveTo(p.x, p.y); 
+    }
+    
+    function move(e) { 
+      if (!isDrawing) return; 
+      const p = getCanvasPos(e); 
+      ctx.lineTo(p.x, p.y); 
+      ctx.stroke(); 
+    }
+    
+    function end() { 
+      isDrawing = false; 
+    }
 
     canvas.addEventListener("mousedown", start);
     canvas.addEventListener("mousemove", move);
@@ -227,15 +317,18 @@
     canvas.addEventListener("touchmove", (e) => { e.preventDefault(); move(e); }, { passive: false });
     window.addEventListener("touchend", end);
 
-    function draw(e) {
-      if (!isDrawing) return;
-      const p = getCanvasPos(e);
-      ctx.lineTo(p.x, p.y);
-      ctx.stroke();
+    function showSignatureModal() {
+      sigModal.classList.remove("hidden");
+      if (guideOverlay) {
+        guideOverlay.classList.remove("hidden");
+        guideOverlay.style.opacity = "1";
+        setTimeout(dismissGuide, 2200); // 2.2 秒後自動隱藏
+      }
+      setTimeout(resizeCanvas, 60);
     }
 
-    openBtn.addEventListener("click", () => { sigModal.classList.remove("hidden"); });
-    reSignBtn.addEventListener("click", () => { sigModal.classList.remove("hidden"); });
+    openBtn.addEventListener("click", showSignatureModal);
+    reSignBtn.addEventListener("click", showSignatureModal);
     cancelBtn.addEventListener("click", () => { sigModal.classList.add("hidden"); });
 
     clearBtn.addEventListener("click", () => {
@@ -245,7 +338,7 @@
 
     saveBtn.addEventListener("click", () => {
       if (!hasDrawn) {
-        alert("請在簽名板上簽名後再保存！");
+        alert("請在簽名板上書寫簽名後再保存！");
         return;
       }
       savedSignatureBase64 = canvas.toDataURL("image/png");
@@ -256,6 +349,12 @@
       validateForm();
     });
 
+    window.addEventListener("resize", () => {
+      if (!sigModal.classList.contains("hidden")) {
+        resizeCanvas();
+      }
+    });
+
     function validateForm() {
       const idVal = document.getElementById("empId").value.trim();
       const nameVal = document.getElementById("name").value.trim();
@@ -264,11 +363,11 @@
 
       if (idVal && nameVal && agree && savedSignatureBase64) {
         btn.disabled = false;
-        btn.className = "w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl transition shadow-lg cursor-pointer";
+        btn.className = "w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl text-base transition shadow-lg cursor-pointer active:scale-[0.99]";
         btn.innerText = "確認閱讀完成並送出簽認";
       } else {
         btn.disabled = true;
-        btn.className = "w-full bg-slate-300 text-slate-500 font-bold py-3.5 rounded-xl transition cursor-not-allowed";
+        btn.className = "w-full bg-slate-300 text-slate-500 font-bold py-4 rounded-xl text-base transition cursor-not-allowed";
         btn.innerText = "請完成所有欄位與親筆簽名";
       }
     }
