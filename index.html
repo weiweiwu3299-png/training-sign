@@ -1,20 +1,27 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-TW" class="overflow-x-hidden">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 鎖定螢幕寬度，嚴禁左右橫移跑版 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>宣導/告知/訓練 現場簽核</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    html, body {
+      overflow-x: hidden;
+      width: 100%;
+      position: relative;
+    }
     #modalSigCanvas { touch-action: none; }
   </style>
 </head>
-<body class="bg-slate-100 min-h-screen p-4 flex justify-center items-center font-sans">
+<body class="bg-slate-100 min-h-screen p-3 md:p-6 flex justify-center items-start font-sans">
 
-  <div class="bg-white w-full max-w-md rounded-2xl shadow-md p-6 space-y-5 my-4">
+  <!-- 主內容容器：限制寬度並支援上下滑動 -->
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-md p-5 space-y-5 my-2">
     
     <!-- 1. 訓練資訊與內容區 -->
-    <div class="border-b pb-4 space-y-2">
+    <div class="border-b pb-4 space-y-3">
       <div class="flex items-center justify-between">
         <span class="text-xs bg-blue-100 text-blue-800 font-semibold px-2.5 py-1 rounded-full" id="categoryBadge">
           宣導/告知/訓練
@@ -22,21 +29,23 @@
         <span class="text-xs text-slate-400">線上無紙化</span>
       </div>
       
-      <h1 class="text-xl font-bold text-slate-800" id="courseTitle">載入中...</h1>
+      <h1 class="text-xl font-bold text-slate-800 leading-snug" id="courseTitle">載入中...</h1>
       
       <div class="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-sm text-slate-800 space-y-2">
         <p class="font-bold text-amber-900 flex items-center gap-1">
           <span>⚠️</span> 宣導/告知/訓練 重點項目：
         </p>
-        <div id="courseContent" class="whitespace-pre-line leading-relaxed text-sm">
+        <div id="courseContent" class="whitespace-pre-line leading-relaxed text-sm break-words">
           正在從雲端載入內容...
         </div>
       </div>
 
-      <!-- 2. 教材圖片展示區 (最多 8 張) -->
+      <!-- 2. 教材圖片展示區 (支援最多 8 張，點擊可放大) -->
       <div id="imageGallery" class="hidden space-y-3 pt-2">
-        <p class="text-xs font-bold text-slate-600">說明圖示與規範照片：</p>
-        <div id="imageList" class="space-y-3"></div>
+        <p class="text-xs font-bold text-slate-700 flex items-center gap-1">
+          <span>🖼️</span> 說明圖示與規範照片 (點擊可看大圖)：
+        </p>
+        <div id="imageList" class="space-y-4"></div>
       </div>
     </div>
 
@@ -57,15 +66,13 @@
       <div>
         <label class="block text-xs font-semibold text-slate-700 mb-1">本人親筆手寫簽名 <span class="text-red-500">*</span></label>
         
-        <!-- 尚未簽名狀態 -->
-        <button type="button" id="openSignModalBtn" class="w-full py-3 border-2 border-dashed border-blue-400 bg-blue-50 text-blue-700 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-blue-100">
+        <button type="button" id="openSignModalBtn" class="w-full py-3.5 border-2 border-dashed border-blue-400 bg-blue-50 text-blue-700 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-100">
           <span>✍️</span> 點此開啟全螢幕簽名板
         </button>
 
-        <!-- 簽完名預覽狀態 (預設隱藏) -->
         <div id="signedPreviewBox" class="hidden border rounded-xl p-2 bg-slate-50 flex items-center justify-between">
           <img id="sigPreviewImg" class="h-12 max-w-[180px] object-contain border bg-white rounded" />
-          <button type="button" id="reSignBtn" class="text-xs text-blue-600 underline px-2">重簽</button>
+          <button type="button" id="reSignBtn" class="text-xs text-blue-600 underline font-semibold px-2">重簽</button>
         </div>
       </div>
 
@@ -76,7 +83,7 @@
         </label>
       </div>
 
-      <!-- 送出按鈕 (全填完才亮綠色) -->
+      <!-- 送出按鈕 (未齊全前為灰色) -->
       <button type="submit" id="submitBtn" disabled class="w-full bg-slate-300 text-slate-500 font-bold py-3.5 rounded-xl transition cursor-not-allowed">
         請完成所有欄位與親筆簽名
       </button>
@@ -92,11 +99,11 @@
   </div>
 
   <!-- 全螢幕彈跳簽名 Modal -->
-  <div id="sigModal" class="fixed inset-0 bg-black/70 z-50 hidden flex flex-col justify-center items-center p-4">
+  <div id="sigModal" class="fixed inset-0 bg-black/75 z-50 hidden flex flex-col justify-center items-center p-3">
     <div class="bg-white w-full max-w-lg rounded-2xl p-4 flex flex-col space-y-3 shadow-2xl">
       <div class="flex justify-between items-center border-b pb-2">
-        <span class="font-bold text-slate-800 text-sm">請使用手指或觸控筆在下方簽名</span>
-        <button type="button" id="modalClearBtn" class="text-xs text-red-500 hover:text-red-700 underline">清除重寫</button>
+        <span class="font-bold text-slate-800 text-sm">請在框內用手指簽名</span>
+        <button type="button" id="modalClearBtn" class="text-xs text-red-500 hover:text-red-700 underline font-semibold">清除重寫</button>
       </div>
 
       <div class="border-2 border-slate-300 rounded-xl bg-slate-50 overflow-hidden">
@@ -104,10 +111,16 @@
       </div>
 
       <div class="grid grid-cols-2 gap-3 pt-1">
-        <button type="button" id="modalCancelBtn" class="py-2.5 bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold">取消</button>
-        <button type="button" id="modalSaveBtn" class="py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold">保存簽名</button>
+        <button type="button" id="modalCancelBtn" class="py-2.5 bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold">取消</button>
+        <button type="button" id="modalSaveBtn" class="py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold shadow">保存簽名</button>
       </div>
     </div>
+  </div>
+
+  <!-- 點擊照片放大檢視 Modal -->
+  <div id="imageLightbox" class="fixed inset-0 bg-black/90 z-50 hidden flex flex-col justify-center items-center p-2" onclick="closeLightbox()">
+    <img id="lightboxImg" class="max-w-full max-h-[85vh] object-contain rounded-lg" />
+    <p id="lightboxNote" class="text-white text-xs mt-3 text-center px-4 bg-black/50 py-1 rounded"></p>
   </div>
 
   <script>
@@ -115,10 +128,10 @@
     const urlParams = new URLSearchParams(window.location.search);
     const fileId = urlParams.get('f');
 
-    let courseRoster = {}; // ID 對照表
-    let savedSignatureBase64 = ""; // 暫存手寫簽名
+    let courseRoster = {};
+    let savedSignatureBase64 = "";
 
-    // 1. 開頁自動載入課程內容、教材圖片與人員名冊
+    // 載入課程教材與名冊
     async function loadCourse() {
       if (!fileId) {
         document.getElementById("courseTitle").innerText = "未指定課程";
@@ -135,7 +148,7 @@
           document.getElementById("courseContent").innerText = data.info.content;
           courseRoster = data.roster || {};
 
-          // 載入圖片 (若有)
+          // 圖片渲染 (採用直接 Base64 或 直連網址，並可點擊放大)
           if (data.info.images && data.info.images.length > 0) {
             const gallery = document.getElementById("imageGallery");
             const list = document.getElementById("imageList");
@@ -143,10 +156,11 @@
             list.innerHTML = "";
             data.info.images.forEach(img => {
               const item = document.createElement("div");
-              item.className = "border rounded-xl overflow-hidden bg-slate-50";
+              item.className = "border border-slate-200 rounded-xl overflow-hidden bg-slate-50 shadow-sm";
+              const imgSrc = img.base64 || img.url;
               item.innerHTML = `
-                <img src="${img.url}" class="w-full max-h-56 object-cover" />
-                ${img.note ? `<p class="p-2 text-xs text-slate-600">${img.note}</p>` : ''}
+                <img src="${imgSrc}" class="w-full h-auto max-h-64 object-contain bg-white cursor-pointer" onclick="openLightbox('${imgSrc}', '${encodeURIComponent(img.note || '')}')" />
+                ${img.note ? `<p class="p-2.5 text-xs text-slate-700 bg-slate-50 border-t">${img.note}</p>` : ''}
               `;
               list.appendChild(item);
             });
@@ -158,7 +172,17 @@
     }
     loadCourse();
 
-    // 2. 輸入 ID 自動帶出姓名
+    function openLightbox(src, note) {
+      document.getElementById("lightboxImg").src = src;
+      document.getElementById("lightboxNote").innerText = decodeURIComponent(note);
+      document.getElementById("imageLightbox").classList.remove("hidden");
+    }
+
+    function closeLightbox() {
+      document.getElementById("imageLightbox").classList.add("hidden");
+    }
+
+    // 輸入 ID 自動帶出姓名
     document.getElementById("empId").addEventListener("input", function(e) {
       const val = e.target.value.trim();
       if (courseRoster[val]) {
@@ -170,7 +194,7 @@
     document.getElementById("name").addEventListener("input", validateForm);
     document.getElementById("agreeCheck").addEventListener("change", validateForm);
 
-    // 3. 彈跳全螢幕手寫簽名板邏輯
+    // Canvas 全螢幕簽名板
     const sigModal = document.getElementById("sigModal");
     const openBtn = document.getElementById("openSignModalBtn");
     const reSignBtn = document.getElementById("reSignBtn");
@@ -204,8 +228,15 @@
     canvas.addEventListener("mousemove", move);
     window.addEventListener("mouseup", end);
     canvas.addEventListener("touchstart", (e) => { e.preventDefault(); start(e); }, { passive: false });
-    canvas.addEventListener("touchmove", (e) => { e.preventDefault(); move(e); }, { passive: false });
+    canvas.addEventListener("touchmove", (e) => { e.preventDefault(); draw(e); }, { passive: false });
     window.addEventListener("touchend", end);
+
+    function draw(e) {
+      if (!isDrawing) return;
+      const p = getCanvasPos(e);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+    }
 
     openBtn.addEventListener("click", () => { sigModal.classList.remove("hidden"); });
     reSignBtn.addEventListener("click", () => { sigModal.classList.remove("hidden"); });
@@ -218,7 +249,7 @@
 
     saveBtn.addEventListener("click", () => {
       if (!hasDrawn) {
-        alert("請在簽名板上書寫簽名後再保存！");
+        alert("請在簽名板上簽名後再保存！");
         return;
       }
       savedSignatureBase64 = canvas.toDataURL("image/png");
@@ -229,7 +260,7 @@
       validateForm();
     });
 
-    // 4. 動態欄位檢查 (全滿才變綠色)
+    // 嚴格檢驗所有必填欄位 (全部符合才亮綠色)
     function validateForm() {
       const idVal = document.getElementById("empId").value.trim();
       const nameVal = document.getElementById("name").value.trim();
@@ -247,7 +278,6 @@
       }
     }
 
-    // 5. 送出簽核資料
     document.getElementById("signForm").addEventListener("submit", async function(e) {
       e.preventDefault();
       const btn = document.getElementById("submitBtn");
