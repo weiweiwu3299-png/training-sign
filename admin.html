@@ -44,7 +44,7 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">課程編號 <span class="text-red-500">*</span></label>
-            <input type="text" id="courseId" placeholder="例如: TR-20260908" required class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+            <input type="text" id="courseId" placeholder="例如: M02DD211501001" required class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">經辦人員 <span class="text-red-500">*</span></label>
@@ -54,15 +54,15 @@
 
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">主題名稱 <span class="text-red-500">*</span></label>
-          <input type="text" id="title" placeholder="例如: 現場作業安全規範與防護具穿戴規範" required class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+          <input type="text" id="title" placeholder="例如: 變更管理-R6611內部裂紋搶修 教育訓練" required class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
         </div>
 
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">詳細說明內容 <span class="text-red-500">*</span></label>
-          <textarea id="content" rows="5" placeholder="請填寫訓練項目與要點（可多行分段）..." required class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed"></textarea>
+          <textarea id="content" rows="5" placeholder="請填寫訓練項目與要點..." required class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed"></textarea>
         </div>
 
-        <!-- 應上課人員名冊：部門自動帶入 + 手動彈性增刪 -->
+        <!-- 應上課人員名冊 -->
         <div class="border rounded-xl p-4 bg-slate-50 space-y-3">
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
             <div>
@@ -78,7 +78,6 @@
             <span class="text-xs text-slate-400">正在讀取雲端部門名冊...</span>
           </div>
 
-          <!-- 人員標籤清單 -->
           <div class="bg-white p-3 rounded-lg border">
             <p class="text-[11px] text-slate-400 mb-2">點擊同仁標籤上的 ✕ 可將其移出本次課程：</p>
             <div id="rosterChipsBox" class="flex flex-wrap gap-2 max-h-36 overflow-y-auto">
@@ -110,7 +109,6 @@
         <span class="text-xs px-2 py-1 bg-emerald-100 text-emerald-800 rounded-full font-semibold">課程進行中</span>
       </div>
 
-      <!-- QR Code 與連結 -->
       <div class="flex flex-col md:flex-row items-center gap-6 p-4 bg-slate-50 rounded-xl border">
         <div id="qrcode" class="p-2 bg-white rounded-lg shadow-sm border"></div>
         <div class="space-y-2 flex-1 text-center md:text-left">
@@ -123,7 +121,6 @@
         </div>
       </div>
 
-      <!-- 產出簽名表 PDF (純資料流串流下載) -->
       <div class="p-4 bg-blue-50 rounded-xl border border-blue-200 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
           <p class="text-sm font-bold text-blue-900">匯出完整結案簽名表 (含教材圖檔與本人簽名)</p>
@@ -134,13 +131,11 @@
         </button>
       </div>
 
-      <!-- 未簽名名冊檢視區 -->
       <div id="unsignedBox" class="hidden p-4 bg-amber-50 rounded-xl border border-amber-200 space-y-2">
         <h4 class="text-sm font-bold text-amber-900" id="unsignedCountText">尚未簽認人員</h4>
         <div id="unsignedList" class="flex flex-wrap gap-2 text-xs"></div>
       </div>
 
-      <!-- 發布後動態修訂名冊 -->
       <div class="p-4 bg-purple-50 rounded-xl border border-purple-200 space-y-3">
         <div class="flex justify-between items-center">
           <div>
@@ -152,7 +147,7 @@
           </button>
         </div>
         <div class="flex gap-2">
-          <input type="text" id="liveAddId" placeholder="工號 (例如 N000999)" class="border rounded p-1.5 text-xs w-36 bg-white">
+          <input type="text" id="liveAddId" placeholder="工號" class="border rounded p-1.5 text-xs w-36 bg-white">
           <input type="text" id="liveAddName" placeholder="姓名" class="border rounded p-1.5 text-xs w-32 bg-white">
           <button type="button" onclick="addLivePerson()" class="px-3 py-1.5 bg-purple-100 text-purple-800 border border-purple-300 rounded text-xs font-semibold hover:bg-purple-200">
             ＋ 新增
@@ -227,7 +222,7 @@
   </div>
 
   <script>
-    // 已更新為您提供的新專案網址
+    // 您的公司新專案網址
     const GAS_URL = "https://script.google.com/macros/s/AKfycbzdRQXvAC-FkZTRal4vfy3VRUHXxhWeUUKbbXxjIXbp0ITOC3T0PQelrmSDoefu3NEz/exec";
     const GITHUB_USER = "weiweiwu3299-png";
     const MOBILE_SIGN_PAGE = `https://${GITHUB_USER}.github.io/training-sign/index.html`;
@@ -377,7 +372,8 @@
       renderDashboard(opt.dataset.title, opt.dataset.url, fileId);
     }
 
-    function compressImage(file, maxWidth = 800, quality = 0.6) {
+    // 前端強效壓縮：限制最大 600px，品質 0.45，單張約 30KB，杜絕封包過大
+    function compressImage(file, maxWidth = 600, quality = 0.45) {
       return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -490,6 +486,7 @@
       document.getElementById("previewModal").classList.add("hidden");
     });
 
+    // 確認建立活頁簿 (加入精確錯誤捕捉)
     document.getElementById("confirmPublishBtn").addEventListener("click", async function() {
       const btn = document.getElementById("confirmPublishBtn");
       btn.disabled = true;
@@ -524,11 +521,11 @@
           renderDashboard(payload.title, result.sheetUrl, currentFileId);
           loadHistoryList();
         } else {
-          alert("建立失敗：" + result.message);
+          alert("建立失敗，後端回傳原因：\n" + (result.message || "未知錯誤"));
         }
       } catch (err) {
         console.error("建立活頁簿錯誤：", err);
-        alert("連線建立異常！請確認網路及 Apps Script 最新版本部署。");
+        alert("連線建立異常！詳細錯誤：" + err.message + "\n請確認 Apps Script 已點擊『部署』並選『建立新版本』！");
       } finally {
         btn.disabled = false;
         btn.innerText = "確認建立並生成 QR Code";
