@@ -123,7 +123,7 @@
         </div>
       </div>
 
-      <!-- 產出簽名表 PDF -->
+      <!-- 產出簽名表 PDF (串流下載) -->
       <div class="p-4 bg-blue-50 rounded-xl border border-blue-200 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
           <p class="text-sm font-bold text-blue-900">匯出完整結案簽名表 (含教材圖檔與本人簽名)</p>
@@ -140,7 +140,7 @@
         <div id="unsignedList" class="flex flex-wrap gap-2 text-xs"></div>
       </div>
 
-      <!-- 【全新功能】：發布後隨時修訂本次名冊 -->
+      <!-- 發布後動態修訂名冊 -->
       <div class="p-4 bg-purple-50 rounded-xl border border-purple-200 space-y-3">
         <div class="flex justify-between items-center">
           <div>
@@ -227,14 +227,15 @@
   </div>
 
   <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbzdRQXvAC-FkZTRal4vfy3VRUHXxhWeUUKbbXxjIXbp0ITOC3T0PQelrmSDoefu3NEz/exec";
+    // 您的 Apps Script 部署正式網址 (/exec)
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyGT6xpXAsads6FAzH8bmh9fQeJ69PNT2pkN6lq3Ceth1YhX9z_gct7RLN6qBy4udRk/exec";
     const GITHUB_USER = "weiweiwu3299-png";
     const MOBILE_SIGN_PAGE = `https://${GITHUB_USER}.github.io/training-sign/index.html`;
 
     let uploadedImages = [];
     let currentFileId = "";
-    let activeRoster = [];       // 開課前可自由增刪的名冊清單
-    let liveEditRoster = [];     // 發布後線上修訂的名冊清單
+    let activeRoster = [];
+    let liveEditRoster = [];
 
     // 1. 自動向總名冊載入所有部門清單
     async function loadDepartmentCheckboxes() {
@@ -254,6 +255,8 @@
             label.innerHTML = `<input type="checkbox" name="deptChoice" value="${dept}" onchange="onDeptChanged()" class="dept-box rounded"> ${dept}`;
             container.appendChild(label);
           });
+        } else {
+          container.innerHTML = '<span class="text-xs text-red-500">未找到任何部門分頁，請確認【公司人員總名冊】試算表。</span>';
         }
       } catch (err) {
         container.innerHTML = '<span class="text-xs text-red-500">讀取部門失敗，請確認網路與權限。</span>';
@@ -267,13 +270,11 @@
       onDeptChanged();
     }
 
-    // 勾選部門變更時，自動追加該部門人員（不覆蓋手動追加的人員）
     async function onDeptChanged() {
       const boxes = Array.from(document.querySelectorAll(".dept-box:checked"));
       const selectedDepts = boxes.map(b => b.value);
 
       if (selectedDepts.length === 0) {
-        // 若全部取消勾選，保留手動加入的人
         activeRoster = activeRoster.filter(r => r.isManual);
         renderRosterChips();
         return;
@@ -283,7 +284,6 @@
         const res = await fetch(`${GAS_URL}?action=getRosterByDept&depts=${encodeURIComponent(selectedDepts.join(","))}`);
         const data = await res.json();
         if (data.status === "success") {
-          // 合併：保留現有手動人員，並加入選取部門人員（防止重複）
           const manualUsers = activeRoster.filter(r => r.isManual);
           const deptUsers = data.roster;
           const map = new Map();
@@ -297,7 +297,6 @@
       }
     }
 
-    // 渲染開課前的名冊標籤
     function renderRosterChips() {
       const box = document.getElementById("rosterChipsBox");
       const badge = document.getElementById("rosterCountBadge");
@@ -325,7 +324,6 @@
       renderRosterChips();
     }
 
-    // 手動追加人員彈窗
     function openManualAddModal() {
       document.getElementById("modalAddId").value = "";
       document.getElementById("modalAddName").value = "";
@@ -339,7 +337,6 @@
       const name = document.getElementById("modalAddName").value.trim();
       if (!id || !name) return alert("請完整填寫 ID 與姓名！");
 
-      // 檢查是否已存在
       if (activeRoster.some(r => r.id === id)) {
         alert("此人員 ID 已存在於名冊中！");
         return;
@@ -349,7 +346,6 @@
       closeManualAddModal();
     }
 
-    // 載入歷史課程清單
     async function loadHistoryList() {
       try {
         const res = await fetch(`${GAS_URL}?action=getCourseList`);
@@ -382,7 +378,6 @@
       renderDashboard(opt.dataset.title, opt.dataset.url, fileId);
     }
 
-    // 前端壓縮圖片
     function compressImage(file, maxWidth = 800, quality = 0.6) {
       return new Promise((resolve) => {
         const reader = new FileReader();
@@ -447,7 +442,6 @@
       uploadedImages[idx].note = val;
     }
 
-    // 點擊預覽按鈕
     document.getElementById("previewBtn").addEventListener("click", function() {
       const courseId = document.getElementById("courseId").value.trim();
       const creator = document.getElementById("creator").value.trim();
@@ -497,7 +491,6 @@
       document.getElementById("previewModal").classList.add("hidden");
     });
 
-    // 確認建立活頁簿
     document.getElementById("confirmPublishBtn").addEventListener("click", async function() {
       const btn = document.getElementById("confirmPublishBtn");
       btn.disabled = true;
@@ -543,7 +536,6 @@
       }
     });
 
-    // 渲染儀表板並載入線上即時名冊
     function renderDashboard(title, sheetUrl, fileId) {
       const signUrl = `${MOBILE_SIGN_PAGE}?f=${fileId}`;
       const qrDiv = document.getElementById("qrcode");
@@ -556,13 +548,9 @@
       document.getElementById("resultPanel").classList.remove("hidden");
       document.getElementById("resultPanel").scrollIntoView({ behavior: "smooth" });
 
-      // 載入發布後的即時名冊以供隨時修訂
       loadLiveCourseRoster(fileId);
     }
 
-    // ----------------------------------------------------
-    // 【核心新功能】：發布後隨時動態增刪名冊邏輯
-    // ----------------------------------------------------
     async function loadLiveCourseRoster(fileId) {
       const container = document.getElementById("liveRosterChips");
       container.innerHTML = '<span class="text-xs text-slate-400">正在讀取雲端名冊...</span>';
@@ -647,7 +635,6 @@
       }
     }
 
-    // 未簽名比對
     async function checkUnsigned() {
       if (!currentFileId) return;
       try {
@@ -674,7 +661,7 @@
       }
     }
 
-    // 匯出 PDF
+    // 匯出 PDF (純資料流串流下載，零殘留檔案)
     async function exportPdf() {
       if (!currentFileId) return alert("請先選取或建立課程！");
       const pdfBtn = document.getElementById("pdfBtn");
@@ -685,11 +672,17 @@
         const res = await fetch(`${GAS_URL}?action=exportPdf&fileId=${currentFileId}`);
         const data = await res.json();
         if (data.status === "success") {
-          window.open(data.pdfUrl, "_blank");
+          const downloadLink = document.createElement("a");
+          downloadLink.href = data.pdfDataUri;
+          downloadLink.download = data.fileName || "訓練簽核表.pdf";
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
         } else {
           alert("產出 PDF 失敗，原因：\n" + (data.message || "未知錯誤"));
         }
       } catch (e) {
+        console.error(e);
         alert("連線或解析回應異常：" + e.message);
       } finally {
         pdfBtn.disabled = false;
