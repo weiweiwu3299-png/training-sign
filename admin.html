@@ -78,7 +78,7 @@
             <span class="text-xs text-slate-400">正在讀取雲端部門名冊...</span>
           </div>
 
-          <!-- 人員標籤清單 (可個別點 ✕ 刪減) -->
+          <!-- 人員標籤清單 -->
           <div class="bg-white p-3 rounded-lg border">
             <p class="text-[11px] text-slate-400 mb-2">點擊同仁標籤上的 ✕ 可將其移出本次課程：</p>
             <div id="rosterChipsBox" class="flex flex-wrap gap-2 max-h-36 overflow-y-auto">
@@ -103,7 +103,7 @@
       </form>
     </div>
 
-    <!-- 課程儀表板 (建立完成或調閱歷史時顯示) -->
+    <!-- 課程儀表板 -->
     <div id="resultPanel" class="hidden bg-white p-6 rounded-2xl shadow-sm border border-emerald-400 space-y-6">
       <div class="flex justify-between items-center border-b pb-3">
         <h3 class="text-lg font-bold text-slate-800" id="resTitle"></h3>
@@ -123,7 +123,7 @@
         </div>
       </div>
 
-      <!-- 產出簽名表 PDF (串流下載) -->
+      <!-- 產出簽名表 PDF (純資料流串流下載) -->
       <div class="p-4 bg-blue-50 rounded-xl border border-blue-200 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
           <p class="text-sm font-bold text-blue-900">匯出完整結案簽名表 (含教材圖檔與本人簽名)</p>
@@ -134,7 +134,7 @@
         </button>
       </div>
 
-      <!-- 未簽名名冊彈跳檢視區 -->
+      <!-- 未簽名名冊檢視區 -->
       <div id="unsignedBox" class="hidden p-4 bg-amber-50 rounded-xl border border-amber-200 space-y-2">
         <h4 class="text-sm font-bold text-amber-900" id="unsignedCountText">尚未簽認人員</h4>
         <div id="unsignedList" class="flex flex-wrap gap-2 text-xs"></div>
@@ -167,7 +167,7 @@
 
   </div>
 
-  <!-- 手動新增同仁 Modal (開課前用) -->
+  <!-- 手動新增同仁 Modal -->
   <div id="manualAddModal" class="fixed inset-0 bg-black/60 z-50 hidden flex justify-center items-center p-4">
     <div class="bg-white w-full max-w-sm rounded-2xl p-5 space-y-4 shadow-2xl">
       <h3 class="font-bold text-slate-800 text-sm">手動追加應訓同仁</h3>
@@ -227,8 +227,8 @@
   </div>
 
   <script>
-    // 您的 Apps Script 部署正式網址 (/exec)
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbyGT6xpXAsads6FAzH8bmh9fQeJ69PNT2pkN6lq3Ceth1YhX9z_gct7RLN6qBy4udRk/exec";
+    // 已更新為您提供的新專案網址
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzdRQXvAC-FkZTRal4vfy3VRUHXxhWeUUKbbXxjIXbp0ITOC3T0PQelrmSDoefu3NEz/exec";
     const GITHUB_USER = "weiweiwu3299-png";
     const MOBILE_SIGN_PAGE = `https://${GITHUB_USER}.github.io/training-sign/index.html`;
 
@@ -237,7 +237,6 @@
     let activeRoster = [];
     let liveEditRoster = [];
 
-    // 1. 自動向總名冊載入所有部門清單
     async function loadDepartmentCheckboxes() {
       const container = document.getElementById("deptCheckboxContainer");
       try {
@@ -661,7 +660,6 @@
       }
     }
 
-    // 匯出 PDF (純資料流串流下載，零殘留檔案)
     async function exportPdf() {
       if (!currentFileId) return alert("請先選取或建立課程！");
       const pdfBtn = document.getElementById("pdfBtn");
